@@ -16,16 +16,15 @@ import ch.hevs.gdx2d.desktop.PortableApplication
 object HelloWorldScala {
 
   def main(args: Array[String]): Unit = {
-    new HelloWorldScala
+    new HelloWorldScala(1920,1080)
   }
 }
 
-class HelloWorldScala extends PortableApplication {
+class HelloWorldScala(var width: Int, var height: Int) extends PortableApplication(width, height) {
   private var imgBitmap: BitmapImage = null
 
   override def onInit(): Unit = {
     setTitle("Hello World - mui 2024")
-
 
     // Load a custom image (or from the lib "res/lib/icon64.png")
     imgBitmap = new BitmapImage("data/images/ISC_logo.png")
