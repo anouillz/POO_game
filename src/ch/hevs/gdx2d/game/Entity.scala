@@ -9,7 +9,7 @@ trait Entity {
 
   var name: String
   var spriteFile: String
-  var spriteSheet: Spritesheet
+  var ss: Spritesheet
   var speed: Float
   var textureX: Int
   var textureY: Int
@@ -23,6 +23,7 @@ trait Entity {
   val SPRITEWIDTH: Int = 32
   val SPRITEHEIGHT: Int = 32
   val FRAMETIME: Float = 0.1f
+
 
   def animate(elsapsedTime: Double): Unit
 

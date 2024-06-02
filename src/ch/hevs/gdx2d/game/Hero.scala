@@ -1,69 +1,81 @@
 package ch.hevs.gdx2d.game
 
-import ch.hevs.gdx2d.components.bitmaps.Spritesheet
-import ch.hevs.gdx2d.lib._
+import ch.hevs.gdx2d.components.bitmaps.{BitmapImage, Spritesheet}
+import ch.hevs.gdx2d.lib.GdxGraphics
 import ch.hevs.gdx2d.lib.interfaces.DrawableObject
 import com.badlogic.gdx.math.{Interpolation, Vector2}
 
 class Hero extends Entity with DrawableObject {
 
-  override var name: String = "Hero"
-  override var spriteFile: String = "data/images/lumberjack_sheet32.png"
-  override var spriteSheet: Spritesheet = new Spritesheet(spriteFile, SPRITEWIDTH, SPRITEHEIGHT)
+  println("Hero created")
 
-  override var speed: Float = 1
-  override var textureX: Int = 0
-  override var textureY: Int = 1
-  override var dt: Float = 0
-  override var currentFrame: Int = 0
-  override var nFrames: Int = 4
+  var name: String = "Hero"
+  var spriteFile: String = "data/images/lumberjack_sheet32.png"
 
-  override var position: Vector2 = new Vector2(0,0)
-  override var lastPosition: Vector2 = new Vector2(0,0)
-  override var newPosition: Vector2 = new Vector2(0,0)
+  var textureX = 0
+  var textureY = 1
+  var speed = 1f
+  var dt = 0f
+  var currentFrame = 0
+  var nFrames = 4
 
-  //false by default
-  var move: Boolean = false
+  private val SPRITE_WIDTH = 32
+  private val SPRITE_HEIGHT = 32
+  final val FRAME_TIME = 0.1f // Duration of each frame
+
+  var ss: Spritesheet = _
+
+  var lastPosition: Vector2 = _
+  var newPosition: Vector2 = _
+  var position: Vector2 = _
+
+
+  private var move = false
 
 
   /**
-   * Puts the hero at this given tile
+   * Create the hero at the given start tile.
    * @param x Column
-   * @param y Row
+   * @param y Line
    */
   def this(x: Int, y: Int) = {
     this()
-    this.position = new Vector2(SPRITEWIDTH*x, SPRITEHEIGHT*y)
+    this.position = new Vector2(SPRITE_WIDTH * x, SPRITE_HEIGHT * y)
+    init()
   }
 
   /**
-   * Create Hero at inital position
-   * @param initialPosition Start position on the map
+   * Create the hero at the start position
+   * @param initialPosition Start position [px] on the map.
    */
   def this(initialPosition: Vector2) = {
     this()
-    this.lastPosition = new Vector2(initialPosition.x, initialPosition.y)
-    this.newPosition = new Vector2(initialPosition.x, initialPosition.y)
-    this.position = new Vector2(initialPosition.x, initialPosition.y)
+    this.position = new Vector2(initialPosition)
+    init()
+  }
 
+  private def init(): Unit = {
+    lastPosition = new Vector2(position)
+    newPosition = new Vector2(position)
+    ss = new Spritesheet(spriteFile, SPRITE_WIDTH, SPRITE_HEIGHT)
   }
 
   /**
-   * @return the current position on the map
+   * @return the current position of the hero on the map.
    */
-  def getPosition(): Vector2 ={
-    return this.position
-  }
+  def getPosition: Vector2 = this.position
 
-  override def animate(elapsedTime: Double): Unit = {
-    var frameTime: Float = FRAMETIME / speed
+  /**
+   * Update the position and the texture of the hero.
+   * @param elapsedTime The time [s] elapsed since the last time which this method was called.
+   */
+  def animate(elapsedTime: Double): Unit = {
+    val frameTime = FRAME_TIME / speed
+
     position = new Vector2(lastPosition)
-
-    if(isMoving()) {
-      dt += elapsedTime
-      //varie entre 0 et 1, 0: hero est à la position actuelle et 1: Hero est à la nouvelle position
+    if (isMoving) {
+      dt += elapsedTime.toFloat
       val alpha = (dt + frameTime * currentFrame) / (frameTime * nFrames)
-      // interpolation.linear crée un mouvement lineaire uniforme entre les deux position
       position.interpolate(newPosition, alpha, Interpolation.linear)
     } else {
       dt = 0
@@ -72,17 +84,74 @@ class Hero extends Entity with DrawableObject {
     if (dt > frameTime) {
       dt -= frameTime
       currentFrame = (currentFrame + 1) % nFrames
+
       if (currentFrame == 0) {
         move = false
         lastPosition = new Vector2(newPosition)
         position = new Vector2(newPosition)
       }
     }
-
   }
 
-  override def isMoving(): Boolean = return move
+  /**
+   * @return True if the hero is actually doing a step.
+   */
+  def isMoving: Boolean = move
+
+  /**
+   * @param speed The new speed of the hero.
+   */
+  def setSpeed(speed: Float): Unit = {
+    this.speed = speed
+  }
+
+  /**
+   * Do a step on the given direction
+   * @param direction The direction to go.
+   */
+  def go(direction: Hero.Direction.Value): Unit = {
+    move = true
+    direction match {
+      case Hero.Direction.RIGHT => newPosition.add(SPRITE_WIDTH, 0)
+      case Hero.Direction.LEFT => newPosition.add(-SPRITE_WIDTH, 0)
+      case Hero.Direction.UP => newPosition.add(0, SPRITE_HEIGHT)
+      case Hero.Direction.DOWN => newPosition.add(0, -SPRITE_HEIGHT)
+      case _ =>
+    }
+
+    turn(direction)
+  }
+
+  /**
+   * Turn the hero on the given direction without doing any step.
+   * @param direction The direction to turn.
+   */
+  def turn(direction: Hero.Direction.Value): Unit = {
+    direction match {
+      case Hero.Direction.RIGHT => textureY = 2
+      case Hero.Direction.LEFT => textureY = 1
+      case Hero.Direction.UP => textureY = 3
+      case Hero.Direction.DOWN => textureY = 0
+      case _ =>
+    }
+  }
+
+  /**
+   * Draw the character on the graphic object.
+   * @param g Graphic object.
+   */
+  override def draw(g: GdxGraphics): Unit = {
+    g.draw(ss.sprites(textureY)(currentFrame), position.x, position.y)
+  }
 
 
-  override def draw(gdxGraphics: GdxGraphics): Unit = ???
+}
+
+object Hero {
+
+  object Direction extends Enumeration {
+    type Direction = Value
+    val UP, DOWN, RIGHT, LEFT, NULL = Value
+  }
+
 }
