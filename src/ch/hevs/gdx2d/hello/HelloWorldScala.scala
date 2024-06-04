@@ -1,10 +1,18 @@
 package ch.hevs.gdx2d.hello
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.math.Interpolation
+import box2dLight.{ConeLight, RayHandler}
+import com.badlogic.gdx.{Gdx, Input}
+import com.badlogic.gdx.math.{Interpolation, Vector2}
 import ch.hevs.gdx2d.components.bitmaps.BitmapImage
+import ch.hevs.gdx2d.components.physics.utils.PhysicsConstants
 import ch.hevs.gdx2d.lib.GdxGraphics
 import ch.hevs.gdx2d.desktop.PortableApplication
+import ch.hevs.gdx2d.lib.physics.PhysicsWorld
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.maps.tiled.TiledMapTile
+
+import java.util
+import java.util.{Map, TreeMap}
 
 
 /**
@@ -15,29 +23,29 @@ import ch.hevs.gdx2d.desktop.PortableApplication
  */
 object HelloWorldScala {
 
+
   def main(args: Array[String]): Unit = {
-    new HelloWorldScala(1920,1080)
+    new HelloWorldScala(1920, 1080)
   }
 }
 
 class HelloWorldScala(var width: Int, var height: Int) extends PortableApplication(width, height) {
-  private var imgBitmap: BitmapImage = null
+  private val keyStatus: util.Map[Integer, Boolean] = new util.TreeMap[Integer, Boolean]
+
+  var hero: Hero = null
 
   override def onInit(): Unit = {
-    setTitle("Hello World - mui 2024")
+    hero = new Hero(20, 20)
 
-    // Load a custom image (or from the lib "res/lib/icon64.png")
-    imgBitmap = new BitmapImage("data/images/ISC_logo.png")
+    keyStatus.put(Input.Keys.UP, false)
+    keyStatus.put(Input.Keys.DOWN, false)
+    keyStatus.put(Input.Keys.LEFT, false)
+    keyStatus.put(Input.Keys.RIGHT, false)
   }
 
   /**
    * Some animation related variables
    */
-  private var direction: Int = 1
-  private var currentTime: Float = 0
-  final private val ANIMATION_LENGTH: Float = 2f // Animation length (in seconds)
-  final private val MIN_ANGLE: Float = -20
-  final private val MAX_ANGLE: Float = 20
 
   /**
    * This method is called periodically by the engine
@@ -45,39 +53,71 @@ class HelloWorldScala(var width: Int, var height: Int) extends PortableApplicati
    * @param g
    */
   override def onGraphicRender(g: GdxGraphics): Unit = {
-    // Clears the screen
     g.clear()
-    // Compute the angle of the image using an elastic interpolation
-    val t = computePercentage
-    val angle: Float = Interpolation.sine.apply(MIN_ANGLE, MAX_ANGLE, t)
 
-    // Draw everything
-    g.drawTransformedPicture(getWindowWidth / 2.0f, getWindowHeight / 2.0f, angle, 0.7f, imgBitmap)
-    g.drawStringCentered(getWindowHeight * 0.8f, "Welcome to gdx2d !")
-    g.drawFPS()
-    g.drawSchoolLogo()
+    manageHero()
+
+    //hero.animate((Gdx.graphics.getDeltaTime))
+    hero.draw(g)
   }
+
+  private def manageHero(): Unit = {
+    // Do nothing if hero is already moving
+    // Compute direction and next cell
+    var nextCell: TiledMapTile = null
+    var goalDirection = Hero.Direction.NULL
+    if (keyStatus.get(Input.Keys.RIGHT) && keyStatus.get(Input.Keys.UP)) {
+      goalDirection = Hero.Direction.UP_RIGHT
+    }
+    else if (keyStatus.get(Input.Keys.LEFT) && keyStatus.get(Input.Keys.UP)) {
+      goalDirection = Hero.Direction.UP_LEFT
+    }
+    else if (keyStatus.get(Input.Keys.RIGHT) && keyStatus.get(Input.Keys.DOWN)) {
+      goalDirection = Hero.Direction.DOWN_RIGHT
+    }
+    else if (keyStatus.get(Input.Keys.LEFT) && keyStatus.get(Input.Keys.DOWN)) {
+      goalDirection = Hero.Direction.DOWN_LEFT
+    }
+    else if (keyStatus.get(Input.Keys.RIGHT)) {
+      goalDirection = Hero.Direction.RIGHT
+    }
+    else if (keyStatus.get(Input.Keys.RIGHT)) {
+      goalDirection = Hero.Direction.RIGHT
+    }
+    else if (keyStatus.get(Input.Keys.RIGHT)) {
+      goalDirection = Hero.Direction.RIGHT
+    }
+    else if (keyStatus.get(Input.Keys.RIGHT)) {
+      goalDirection = Hero.Direction.RIGHT
+    }
+    else if (keyStatus.get(Input.Keys.LEFT)) {
+      goalDirection = Hero.Direction.LEFT
+    }
+    else if (keyStatus.get(Input.Keys.UP)) {
+      goalDirection = Hero.Direction.UP
+    }
+    else if (keyStatus.get(Input.Keys.DOWN)) {
+      goalDirection = Hero.Direction.DOWN
+    }
+    hero.go(goalDirection)
+
+  }
+
+  override def onKeyUp(keycode: Int): Unit = {
+    super.onKeyUp(keycode)
+    keyStatus.put(keycode, false)
+  }
+
+  override def onKeyDown(keycode: Int): Unit = {
+    super.onKeyDown(keycode)
+    keyStatus.put(keycode, true)
+  }
+
 
   /**
    * Compute time percentage for making a looping animation
    *
    * @return the current normalized time
    */
-  private def computePercentage: Float = {
-    if (direction == 1) {
-      currentTime += Gdx.graphics.getDeltaTime
-      if (currentTime > ANIMATION_LENGTH) {
-        currentTime = ANIMATION_LENGTH
-        direction *= -1
-      }
-    }
-    else {
-      currentTime -= Gdx.graphics.getDeltaTime
-      if (currentTime < 0) {
-        currentTime = 0
-        direction *= -1
-      }
-    }
-    currentTime / ANIMATION_LENGTH
-  }
+
 }
