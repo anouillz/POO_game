@@ -35,13 +35,15 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   private var tiledLayer: TiledMapTileLayer = _
   private var zoom: Float = _
 
+
+
   override def onInit(): Unit = {
 
     // Create hero
     hero = new Hero(5, 5)
 
     // Set initial zoom
-    zoom = 0.6f
+    zoom = 0.7f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -148,11 +150,9 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
-        var bool: Boolean = (gridMap(i)(j) == 99)
         if(gridMap(i)(j) != 99 && gridMap(i)(j) != 0) {
           changeTile(newMap, newLayer, i, j, groundID)
         } else if(gridMap(i)(j) == 99){
-          println("Wall placed")
           changeTile(newMap, newLayer, i, j, wallID)
         } else if(gridMap(i)(j) == 0){
           changeTile(newMap, newLayer, i, j, noneID)
