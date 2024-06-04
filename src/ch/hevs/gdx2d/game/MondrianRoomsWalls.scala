@@ -7,9 +7,9 @@ class MondrianRoomsWalls {
 
   val width = 50
   val height = 30
-  val maxRooms = 35
+  val maxRooms = 40
   val minRoomSize = 3
-  val maxRoomSize = 9
+  val maxRoomSize = 6
 
   var grid = Array.fill(width, height)(0)
 

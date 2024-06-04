@@ -37,13 +37,14 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
 
 
+
   override def onInit(): Unit = {
 
     // Create hero
     hero = new Hero(5, 5)
 
     // Set initial zoom
-    zoom = 0.7f
+    zoom = 0.6f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -99,7 +100,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
    *            The number of cells over the given position.
    * @return The tile around the given position | null
    */
-  private def getTile(position: Vector2, offsetX: Int, offsetY: Int): TiledMapTile = {
+  def getTile(position: Vector2, offsetX: Int, offsetY: Int): TiledMapTile = {
     try {
       val x = (position.x / tiledLayer.getTileWidth).toInt + offsetX
       val y = (position.y / tiledLayer.getTileHeight).toInt + offsetY
@@ -129,14 +130,30 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   }
 
   private def createCustomMap(originalMap: TiledMap): TiledMap = {
-    // Create a new TiledMap
-    val newMap = new TiledMap()
 
-    // Get the tileset from the original map and add it to the new map
+    //tiles ID
+    var objectID = mutable.HashMap[String, Int](
+      "mirror" -> 202,
+      "coins" -> 64,
+      "chest" -> 103,
+      "jar" -> 242,
+      "cauldron" -> 204,
+      "chair" -> 243,
+      "table" -> 244
+    )
+
+    val noneID = 0
+    val groundID = 65
+    val wallID = 23
+
+    //Create a new TiledMap
+    var newMap = new TiledMap()
+
+    //Get the tileset from the original map and add it to the new map
     val originalTileSet = originalMap.getTileSets.getTileSet(0)
     newMap.getTileSets.addTileSet(originalTileSet)
 
-    // Create a new layer with the same dimensions and tile size as the original
+    //Create a new layer with the same dimensions and tile size as the original
     val originalLayer = originalMap.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
     val tileWidth = originalLayer.getTileWidth
     val tileHeight = originalLayer.getTileHeight
@@ -144,10 +161,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     newMap.getLayers.add(newLayer)
 
-    var groundID: Int = 65
-    var wallID: Int = 23
-    var noneID: Int = 0
-
+    //place the tiles depending on the grid
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
         if(gridMap(i)(j) != 99 && gridMap(i)(j) != 0) {
@@ -157,6 +171,13 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
         } else if(gridMap(i)(j) == 0){
           changeTile(newMap, newLayer, i, j, noneID)
         }
+      }
+    }
+
+    //place objects
+    for(i <- gridMap.indices){
+      for(j <- gridMap(0).indices){
+
       }
     }
 
