@@ -11,6 +11,8 @@ import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile
 import com.badlogic.gdx.math.Vector2
 
 import scala.collection.mutable
+import scala.util.Random
+import scala.util.control.Breaks.break
 
 
 
@@ -44,7 +46,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     hero = new Hero(5, 5)
 
     // Set initial zoom
-    zoom = 0.6f
+    zoom = 1.8f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -175,13 +177,29 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     }
 
     //place objects
+    var leave: Boolean = false
+
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
-
+        if(gridMap(i)(j) != 99 && gridMap(i)(j) != 0){
+          if(gridMap(i)(j)%2 == 0){
+            changeTile(newMap, newLayer, i, j, objectID("coins"))
+          }
+        }
       }
     }
 
     return newMap
+  }
+
+  def placeObject(map1: TiledMap, layer: TiledMapTileLayer, objectID: Int, room: Room): Unit = {
+    var grid= room.roomGrid
+    //Random coordinates to place the object
+    var xRand = Random.nextInt(grid.length)
+    var yRand = Random.nextInt(grid(0).length)
+
+    changeTile(map1, layer, xRand, yRand, objectID)
+
   }
 
   /**

@@ -22,6 +22,7 @@
   <properties>
    <property name="Object" value="Coins"/>
    <property name="isWalkable" type="bool" value="true"/>
+   <property name="speed" type="float" value="1.5"/>
   </properties>
  </tile>
  <tile id="64">

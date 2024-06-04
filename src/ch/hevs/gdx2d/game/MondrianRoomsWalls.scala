@@ -13,11 +13,6 @@ class MondrianRoomsWalls {
 
   var grid = Array.fill(width, height)(0)
 
-//  generateRooms(grid)
-//  placeWalls(grid)
-//
-//  printGrid(grid)
-
 
   def generateRooms(grid: Array[Array[Int]]): Unit = {
     val rand = new Random()
