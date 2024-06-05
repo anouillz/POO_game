@@ -34,10 +34,9 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   // tiles management
   private var tiledMap: TiledMap = _
   private var tiledMapRenderer: TiledMapRenderer = _
-  private var tiledLayer: TiledMapTileLayer = _
+  private var tiledLayer1: TiledMapTileLayer = _
+  private var tiledLayer2: TiledMapTileLayer = _
   private var zoom: Float = _
-
-
 
 
   override def onInit(): Unit = {
@@ -62,7 +61,10 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       tiledMap = createCustomMap(exampleMap)
 
       tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap)
-      tiledLayer = tiledMap.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
+      val layers = tiledMap.getLayers
+
+      tiledLayer1 = layers.get(0).asInstanceOf[TiledMapTileLayer]
+      tiledLayer2 = layers.get(1).asInstanceOf[TiledMapTileLayer]
 
     } catch {
       case e: Exception => e.printStackTrace()
@@ -77,7 +79,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     // Camera follows the hero
     g.zoom(zoom)
-    g.moveCamera(hero.getPosition.x, hero.getPosition.y, tiledLayer.getWidth * tiledLayer.getTileWidth, tiledLayer.getHeight * tiledLayer.getTileHeight)
+    g.moveCamera(hero.getPosition.x, hero.getPosition.y, tiledLayer1.getWidth * tiledLayer1.getTileWidth, tiledLayer1.getHeight * tiledLayer1.getTileHeight)
 
     // Render the tilemap
     tiledMapRenderer.setView(g.getCamera)
@@ -104,10 +106,10 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
    */
   def getTile(position: Vector2, offsetX: Int, offsetY: Int): TiledMapTile = {
     try {
-      val x = (position.x / tiledLayer.getTileWidth).toInt + offsetX
-      val y = (position.y / tiledLayer.getTileHeight).toInt + offsetY
+      val x = (position.x / tiledLayer1.getTileWidth).toInt + offsetX
+      val y = (position.y / tiledLayer1.getTileHeight).toInt + offsetY
 
-      tiledLayer.getCell(x, y).getTile
+      tiledLayer1.getCell(x, y).getTile
     } catch {
       case _: Exception =>
         null
@@ -152,30 +154,37 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     var newMap = new TiledMap()
 
     //Get the tileset from the original map and add it to the new map
-    val originalTileSet = originalMap.getTileSets.getTileSet(0)
-    newMap.getTileSets.addTileSet(originalTileSet)
+    val originalTileSet1 = originalMap.getTileSets.getTileSet(0)
+    val originalTileSet2 = originalMap.getTileSets.getTileSet(1)
+
+    newMap.getTileSets.addTileSet(originalTileSet1)
+    newMap.getTileSets.addTileSet(originalTileSet2)
 
     //Create a new layer with the same dimensions and tile size as the original
-    val originalLayer = originalMap.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
-    val tileWidth = originalLayer.getTileWidth
-    val tileHeight = originalLayer.getTileHeight
-    val newLayer = new TiledMapTileLayer(originalLayer.getWidth, originalLayer.getHeight, tileWidth.toInt, tileHeight.toInt)
+    val originalLayer1 = originalMap.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
+    val originalLayer2 = originalMap.getLayers.get(1).asInstanceOf[TiledMapTileLayer]
 
-    newMap.getLayers.add(newLayer)
+    val tileWidth = originalLayer1.getTileWidth
+    val tileHeight = originalLayer1.getTileHeight
+
+    val newLayer1 = new TiledMapTileLayer(originalLayer1.getWidth, originalLayer1.getHeight, tileWidth.toInt, tileHeight.toInt)
+    val newLayer2 = new TiledMapTileLayer(originalLayer2.getWidth, originalLayer2.getHeight, tileWidth.toInt, tileHeight.toInt)
+
+    newMap.getLayers.add(newLayer1)
+    newMap.getLayers.add(newLayer2)
 
     //place the tiles depending on the grid
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
         if(gridMap(i)(j) != 99 && gridMap(i)(j) != 0) {
-          changeTile(newMap, newLayer, i, j, groundID)
+          changeTile(newMap, newLayer1, i, j, groundID)
         } else if(gridMap(i)(j) == 99){
-          changeTile(newMap, newLayer, i, j, wallID)
+          changeTile(newMap, newLayer1, i, j, wallID)
         } else if(gridMap(i)(j) == 0){
-          changeTile(newMap, newLayer, i, j, noneID)
+          changeTile(newMap, newLayer1, i, j, noneID)
         }
       }
     }
-
 
     //place objects
     var leave: Boolean = false
@@ -184,7 +193,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       for(j <- gridMap(0).indices){
         if(gridMap(i)(j) != 99 && gridMap(i)(j) != 0){
           if(gridMap(i)(j)%2 == 0){
-            changeTile(newMap, newLayer, i, j, objectID("coins"))
+            changeTile(newMap, newLayer2, i, j, objectID("coins"))
           }
         }
       }
