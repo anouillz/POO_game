@@ -19,9 +19,6 @@ class Hero extends Entity with DrawableObject {
   var currentFrame = 0
   var nFrames = 4
 
-  private val SPRITE_WIDTH = 32
-  private val SPRITE_HEIGHT = 32
-  final val FRAME_TIME = 0.1f // Duration of each frame
 
   var ss: Spritesheet = _
 
@@ -40,7 +37,7 @@ class Hero extends Entity with DrawableObject {
    */
   def this(x: Int, y: Int) = {
     this()
-    this.position = new Vector2(SPRITE_WIDTH * x, SPRITE_HEIGHT * y)
+    this.position = new Vector2(SPRITEWIDTH * x, SPRITEHEIGHT * y)
     init()
   }
 
@@ -57,7 +54,7 @@ class Hero extends Entity with DrawableObject {
   private def init(): Unit = {
     lastPosition = new Vector2(position)
     newPosition = new Vector2(position)
-    ss = new Spritesheet(spriteFile, SPRITE_WIDTH, SPRITE_HEIGHT)
+    ss = new Spritesheet(spriteFile, SPRITEWIDTH, SPRITEHEIGHT)
   }
 
   /**
@@ -70,7 +67,7 @@ class Hero extends Entity with DrawableObject {
    * @param elapsedTime The time [s] elapsed since the last time which this method was called.
    */
   def animate(elapsedTime: Double): Unit = {
-    val frameTime = FRAME_TIME / speed
+    val frameTime = FRAMETIME / speed
 
     position = new Vector2(lastPosition)
     if (isMoving) {
@@ -112,10 +109,10 @@ class Hero extends Entity with DrawableObject {
   def go(direction: Hero.Direction.Value): Unit = {
     move = true
     direction match {
-      case Hero.Direction.RIGHT => newPosition.add(SPRITE_WIDTH, 0)
-      case Hero.Direction.LEFT => newPosition.add(-SPRITE_WIDTH, 0)
-      case Hero.Direction.UP => newPosition.add(0, SPRITE_HEIGHT)
-      case Hero.Direction.DOWN => newPosition.add(0, -SPRITE_HEIGHT)
+      case Hero.Direction.RIGHT => newPosition.add(SPRITEWIDTH, 0)
+      case Hero.Direction.LEFT => newPosition.add(-SPRITEWIDTH, 0)
+      case Hero.Direction.UP => newPosition.add(0, SPRITEHEIGHT)
+      case Hero.Direction.DOWN => newPosition.add(0, -SPRITEHEIGHT)
       case _ =>
     }
 

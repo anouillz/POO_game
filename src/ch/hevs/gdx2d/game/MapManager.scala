@@ -43,7 +43,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   override def onInit(): Unit = {
 
     // Create hero
-    hero = new Hero(5, 5)
+    hero = new Hero(2, 2)
 
     // Set initial zoom
     zoom = 1.8f
@@ -175,6 +175,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
         }
       }
     }
+
 
     //place objects
     var leave: Boolean = false

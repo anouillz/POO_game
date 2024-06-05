@@ -13,6 +13,8 @@ class MondrianRoomsWalls {
 
   var grid = Array.fill(width, height)(0)
 
+  var rooms: ArrayBuffer[Room] = ArrayBuffer.empty
+
 
   def generateRooms(grid: Array[Array[Int]]): Unit = {
     val rand = new Random()
@@ -24,10 +26,9 @@ class MondrianRoomsWalls {
     val initialRoomWidth = rand.nextInt(maxRoomSize - minRoomSize + 1) + minRoomSize
     val initialRoomHeight = rand.nextInt(maxRoomSize - minRoomSize + 1) + minRoomSize
     fillRegion(grid, initialX, initialY, initialX + initialRoomWidth, initialY + initialRoomHeight, currentRoom)
+    val roomGrid = Array.fill(initialRoomWidth, initialRoomHeight)(currentRoom)
+    rooms.addOne(new Room(roomGrid, currentRoom))
     currentRoom += 1
-
-    // Store the positions of rooms to ensure connectivity
-    val rooms = ArrayBuffer((initialX, initialY, initialRoomWidth, initialRoomHeight))
 
     // Try to place rooms until maxRooms or coverage goal is reached
     val coverageGoal = (grid.length * grid(0).length) * 0.8 // Target 80% coverage
@@ -40,7 +41,8 @@ class MondrianRoomsWalls {
 
       if (startX != -1 && startY != -1 && canPlaceRoom(grid, startX, startY, roomWidth, roomHeight)) {
         fillRegion(grid, startX, startY, startX + roomWidth, startY + roomHeight, currentRoom)
-        rooms.append((startX, startY, roomWidth, roomHeight))
+        val roomGrid = Array.fill(initialRoomWidth, initialRoomHeight)(currentRoom)
+        rooms.addOne(new Room(roomGrid, currentRoom))
         currentRoom += 1
         attempts = 0 // Reset attempts if successful
       } else {
