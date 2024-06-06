@@ -24,6 +24,8 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
   // character
   private var hero: Hero = _
+  private var enemy1: Enemy = _
+  private var enemy2: Enemy = _
 
   var gridPerso: MondrianRoomsWalls = new MondrianRoomsWalls
 
@@ -45,11 +47,12 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
   override def onInit(): Unit = {
 
-    // Create hero at a position we now is Valid
-    hero = new Hero(3, 3)
-
+    // Create hero
+    hero = new Hero(2, 2)
+    enemy1 = new Enemy (3,3)
+    enemy2 = new Enemy (10,11)
     // Set initial zoom
-    zoom = 0.5f
+    zoom = 0.7f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -88,12 +91,15 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     // Render the tilemap
     tiledMapRenderer.setView(g.getCamera)
-    tiledMapRenderer.render(Array(0))
-    tiledMapRenderer.render(Array(1))
+    tiledMapRenderer.render()
 
     // Draw the hero
     hero.animate(Gdx.graphics.getDeltaTime)
     hero.draw(g)
+    enemy1.animate(Gdx.graphics.getDeltaTime)
+    enemy1.draw(g)
+    enemy2.animate(Gdx.graphics.getDeltaTime)
+    enemy2.draw(g)
 
     //Optional
     g.drawFPS()
@@ -213,6 +219,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     //place objects -
     // rooms even: mirror, chest, cauldron
     // rooms uneven: jar, table, chair
+
     for( i <- rooms.indices){
       if(rooms(i).nb != 1){
         if(rooms(i).nb % 2 == 0){
@@ -226,7 +233,6 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       }
     }
 
-    //place walls and emptiness
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
         if(gridMap(i)(j) == 99){
@@ -334,6 +340,13 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     return false
   }
 
+  def isOccupied(vector: Vector2) : Boolean = {
+    for (enemy: Enemy <- Enemy.enemyArray){
+      if (vector.x == enemy.position.x && vector.y == enemy.position.y) return false
+    }
+    return true
+  }
+
   /**
    * Get the "speed" property of the given tile.
    *
@@ -356,24 +369,32 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       // Compute direction and next cell
       var nextCell: TiledMapTile = null
       var goalDirection: Hero.Direction.Value = Hero.Direction.NULL
-
+      var vectorOffset : Vector2 = new Vector2(0,0)
       if (keyStatus(Input.Keys.RIGHT)) {
         goalDirection = Hero.Direction.RIGHT
         nextCell = getTile(hero.getPosition, 1, 0)
+        vectorOffset = new Vector2(32,0)
       } else if (keyStatus(Input.Keys.LEFT)) {
         goalDirection = Hero.Direction.LEFT
         nextCell = getTile(hero.getPosition, -1, 0)
+        vectorOffset = new Vector2(-32,0)
       } else if (keyStatus(Input.Keys.UP)) {
         goalDirection = Hero.Direction.UP
         nextCell = getTile(hero.getPosition, 0, 1)
+        vectorOffset = new Vector2(0,32)
       } else if (keyStatus(Input.Keys.DOWN)) {
         goalDirection = Hero.Direction.DOWN
         nextCell = getTile(hero.getPosition, 0, -1)
+        vectorOffset = new Vector2(0,-32)
       }
-
+      println(s"Hero position ${hero.position}")
+      println(s"Enemy position ${enemy1.position}")
+      println(s"Offset position ${vectorOffset}")
+      println(isWalkable(nextCell))
+      val nextPositionVector: Vector2 = new Vector2(hero.getPosition.x+vectorOffset.x, hero.getPosition.y+vectorOffset.y)
       // Is the move valid ?
-      if (isWalkable(nextCell)) {
-        // Go to nextCell
+      if ((isWalkable(nextCell) && isOccupied(nextPositionVector))) {
+        // Go
         hero.setSpeed(getSpeed(nextCell))
         hero.go(goalDirection)
       } else {
