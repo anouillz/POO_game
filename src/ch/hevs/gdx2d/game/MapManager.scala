@@ -49,7 +49,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     hero = new Hero(3, 3)
 
     // Set initial zoom
-    zoom = 1.7f
+    zoom = 0.5f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -88,7 +88,8 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     // Render the tilemap
     tiledMapRenderer.setView(g.getCamera)
-    tiledMapRenderer.render()
+    tiledMapRenderer.render(Array(0))
+    tiledMapRenderer.render(Array(1))
 
     // Draw the hero
     hero.animate(Gdx.graphics.getDeltaTime)
@@ -134,17 +135,20 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   def changeTile(map1: TiledMap, layer: TiledMapTileLayer, x: Int, y: Int, newID: Int): Unit = {
     require(layer != null)
 
-    //var cell = layer.getCell(x, y)
-//    if (cell == null) {
-//      cell = new Cell()
-//      layer.setCell(x, y, cell)
-//    }
+    var tileSet = map1.getTileSets.getTileSet(0)
+    var newTile = tileSet.getTile(newID)
 
-    var cell = new Cell()
+    val cell = new Cell()
     layer.setCell(x,y,cell)
 
-    val tileSet = map1.getTileSets.getTileSet(0)
-    val newTile = tileSet.getTile(newID)
+    if(newID < 270){
+      tileSet = map1.getTileSets.getTileSet(0)
+    } else {
+      tileSet = map1.getTileSets.getTileSet(1)
+
+    }
+    newTile = tileSet.getTile(newID)
+
 
     if (newTile != null) {
       cell.setTile(newTile) // Réutiliser l'ancienne tuile au lieu de créer une nouvelle pour garder les propriétés
@@ -209,7 +213,6 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     //place objects -
     // rooms even: mirror, chest, cauldron
     // rooms uneven: jar, table, chair
-
     for( i <- rooms.indices){
       if(rooms(i).nb != 1){
         if(rooms(i).nb % 2 == 0){
@@ -223,6 +226,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       }
     }
 
+    //place walls and emptiness
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
         if(gridMap(i)(j) == 99){
@@ -233,7 +237,9 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       }
     }
 
-
+    //place portal in far room
+    //portal tile id : 562
+    placePortal(newMap, 562)
 
     return newMap
   }
@@ -249,16 +255,14 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     // find room's coordinate in main grid
     var roomX : Int = 0
     var roomY : Int = 0
-    var leaveLoop: Boolean = true
+    var leaveLoop: Boolean = false
 
-    while(leaveLoop){
-      for(i <- gridMap.indices){
-        for(j <- gridMap(0).indices){
-          if (gridMap(i)(j) == room.nb){
-            roomX = i
-            roomY = j
-            leaveLoop = false
-          }
+    for(i <- gridMap.indices){
+      for(j <- gridMap(0).indices){
+        if (gridMap(i)(j) == room.nb){
+          roomX = i
+          roomY = j
+          leaveLoop = true
         }
       }
     }
@@ -272,16 +276,43 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   }
 
 
-  def placePortal(map1: TiledMap, layer: TiledMapTileLayer, room: Room): Unit = {
+  private def placePortal(map1: TiledMap, portalID: Int): Unit = {
 
-    for(i <- gridMap.indices){
-      for(j <- gridMap(0).indices){
-        if(gridMap(i)(j) == room.nb){
+    var layer1 = map1.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
+    var layer2 = map1.getLayers.get(1).asInstanceOf[TiledMapTileLayer]
 
+    var leaveLoop: Boolean = false
+    var x: Int = 0
+    var y: Int = 0
+
+
+    var i: Int = 0
+    var j: Int = 0
+
+    while(!leaveLoop && i < gridMap.length){
+      while(!leaveLoop && j < gridMap(0).length){
+        if(gridMap(i)(j) == 37){
+          x = i
+          y = j
+
+          println(s"X for portal: $x")
+          leaveLoop = true
         }
+        j += 1
       }
+      i += 1
+      j = 0
     }
 
+    //place portal
+    changeTile(map1, layer2, x+2, y+2, portalID)
+    changeTile(map1, layer1, x+2, y+2, 65)
+    changeTile(map1, layer2, x+1, y+2, portalID)
+    changeTile(map1, layer1, x+1, y+2, 65)
+    changeTile(map1, layer2, x+2, y+1, portalID)
+    changeTile(map1, layer1, x+2, y+1, 65)
+    changeTile(map1, layer2, x+1, y+1, portalID)
+    changeTile(map1, layer1, x+1, y+1, 65)
 
   }
 
