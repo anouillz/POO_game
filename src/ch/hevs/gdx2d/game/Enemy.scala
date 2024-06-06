@@ -1,15 +1,17 @@
 package ch.hevs.gdx2d.game
 
 import ch.hevs.gdx2d.components.bitmaps.{BitmapImage, Spritesheet}
+import ch.hevs.gdx2d.game.Enemy.enemyArray
 import ch.hevs.gdx2d.lib.GdxGraphics
 import ch.hevs.gdx2d.lib.interfaces.DrawableObject
 import com.badlogic.gdx.math.{Interpolation, Vector2}
 
-class Hero extends Entity with DrawableObject {
+import scala.collection.mutable.ArrayBuffer
 
-  println("Hero created")
+class Enemy extends Entity with DrawableObject {
 
-  var name: String = "Hero"
+
+  var name: String = "Enemy"
   var spriteFile: String = "data/images/lumberjack_sheet32.png"
 
   var textureX = 0
@@ -26,25 +28,12 @@ class Hero extends Entity with DrawableObject {
   var newPosition: Vector2 = _
   var position: Vector2 = _
 
-  //Game charateristics
-  private var _health: Int = 10
-  private var _money: Int = 0
-
-  def health = _health
-  def health_=(newhealth: Int) = {
-    _health = newhealth
-  }
-
-  def money: Int = _money
-  def money_=(newMoney: Int) = {
-    _money = newMoney
-  }
-
   private var move = false
 
+  enemyArray += this
 
   /**
-   * Create the hero at the given start tile.
+   * Create the enemy at the given start tile.
    * @param x Column
    * @param y Line
    */
@@ -55,7 +44,7 @@ class Hero extends Entity with DrawableObject {
   }
 
   /**
-   * Create the hero at the start position
+   * Create the enemy at the start position
    * @param initialPosition Start position [px] on the map.
    */
   def this(initialPosition: Vector2) = {
@@ -71,19 +60,19 @@ class Hero extends Entity with DrawableObject {
   }
 
   /**
-   * @return the current position of the hero on the map.
+   * @return the current position of the enemy on the map.
    */
   def getPosition: Vector2 = this.position
 
   /**
-   * Update the position and the texture of the hero.
+   * Update the position and the texture of the enemy.
    * @param elapsedTime The time [s] elapsed since the last time which this method was called.
    */
   def animate(elapsedTime: Double): Unit = {
     val frameTime = FRAMETIME / speed
 
     position = new Vector2(lastPosition)
-    if (isMoving()) {
+    if (isMoving) {
       dt += elapsedTime.toFloat
       val alpha = (dt + frameTime * currentFrame) / (frameTime * nFrames)
       position.interpolate(newPosition, alpha, Interpolation.linear)
@@ -104,12 +93,12 @@ class Hero extends Entity with DrawableObject {
   }
 
   /**
-   * @return True if the hero is actually doing a step.
+   * @return True if the enemy is actually doing a step.
    */
-  def isMoving(): Boolean = move
+  def isMoving: Boolean = move
 
   /**
-   * @param speed The new speed of the hero.
+   * @param speed The new speed of the enemy.
    */
   def setSpeed(speed: Float): Unit = {
     this.speed = speed
@@ -119,13 +108,13 @@ class Hero extends Entity with DrawableObject {
    * Do a step on the given direction
    * @param direction The direction to go.
    */
-  def go(direction: Hero.Direction.Value): Unit = {
+  def go(direction: Enemy.Direction.Value): Unit = {
     move = true
     direction match {
-      case Hero.Direction.RIGHT => newPosition.add(SPRITEWIDTH, 0)
-      case Hero.Direction.LEFT => newPosition.add(-SPRITEWIDTH, 0)
-      case Hero.Direction.UP => newPosition.add(0, SPRITEHEIGHT)
-      case Hero.Direction.DOWN => newPosition.add(0, -SPRITEHEIGHT)
+      case Enemy.Direction.RIGHT => newPosition.add(SPRITEWIDTH, 0)
+      case Enemy.Direction.LEFT => newPosition.add(-SPRITEWIDTH, 0)
+      case Enemy.Direction.UP => newPosition.add(0, SPRITEHEIGHT)
+      case Enemy.Direction.DOWN => newPosition.add(0, -SPRITEHEIGHT)
       case _ =>
     }
 
@@ -133,15 +122,15 @@ class Hero extends Entity with DrawableObject {
   }
 
   /**
-   * Turn the hero on the given direction without doing any step.
+   * Turn the enemy on the given direction without doing any step.
    * @param direction The direction to turn.
    */
-  def turn(direction: Hero.Direction.Value): Unit = {
+  def turn(direction: Enemy.Direction.Value): Unit = {
     direction match {
-      case Hero.Direction.RIGHT => textureY = 2
-      case Hero.Direction.LEFT => textureY = 1
-      case Hero.Direction.UP => textureY = 3
-      case Hero.Direction.DOWN => textureY = 0
+      case Enemy.Direction.RIGHT => textureY = 2
+      case Enemy.Direction.LEFT => textureY = 1
+      case Enemy.Direction.UP => textureY = 3
+      case Enemy.Direction.DOWN => textureY = 0
       case _ =>
     }
   }
@@ -157,8 +146,9 @@ class Hero extends Entity with DrawableObject {
 
 }
 
-object Hero {
+object Enemy {
 
+  val enemyArray: ArrayBuffer[Enemy] = new ArrayBuffer()
   object Direction extends Enumeration {
     type Direction = Value
     val UP, DOWN, RIGHT, LEFT, NULL = Value
