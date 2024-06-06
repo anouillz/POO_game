@@ -7,7 +7,7 @@ class MondrianRoomsWalls {
 
   val width = 50
   val height = 30
-  val maxRooms = 40
+  val maxRooms = 42
   val minRoomSize = 3
   val maxRoomSize = 6
 
@@ -47,6 +47,21 @@ class MondrianRoomsWalls {
         attempts = 0 // Reset attempts if successful
       } else {
         attempts += 1
+      }
+
+      if (currentRoom == maxRooms){
+        val lastRoomWidth: Int = 8
+        val lastRoomHeight: Int = 6
+        val(lastRoomStartX, lastRoomStartY) = findAdjacentPosition(grid, lastRoomWidth, lastRoomHeight)
+
+        if(lastRoomStartX != -1 && lastRoomStartY != -1 && canPlaceRoom(grid, lastRoomStartX, lastRoomStartY, lastRoomWidth, lastRoomHeight)) {
+          fillRegion(grid, lastRoomStartX, lastRoomStartY, lastRoomStartX + lastRoomWidth, lastRoomStartY + lastRoomHeight, currentRoom)
+          val roomGrid = Array.fill(initialRoomWidth, initialRoomHeight)(currentRoom)
+          rooms.addOne(new Room(roomGrid, currentRoom))
+          currentRoom += 1
+          attempts = 0
+        }
+
       }
     }
 

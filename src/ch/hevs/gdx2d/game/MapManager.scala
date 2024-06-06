@@ -11,6 +11,7 @@ import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile
 import com.badlogic.gdx.math.Vector2
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 import scala.util.control.Breaks.break
 
@@ -25,8 +26,11 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   private var hero: Hero = _
 
   var gridPerso: MondrianRoomsWalls = new MondrianRoomsWalls
+
+  //Create the grid and rooms necessary to create the map
   var gridMap = gridPerso.grid
   gridPerso.generateRooms(gridMap)
+  var rooms: ArrayBuffer[Room] = gridPerso.rooms
   gridPerso.placeWalls(gridMap)
   gridPerso.printGrid(gridMap)
 
@@ -41,11 +45,11 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
   override def onInit(): Unit = {
 
-    // Create hero
-    hero = new Hero(2, 2)
+    // Create hero at a position we now is Valid
+    hero = new Hero(3, 3)
 
     // Set initial zoom
-    zoom = 1.8f
+    zoom = 1.7f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -55,14 +59,15 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     // create map
     try {
+      //Original map with different tiles used to make our custom map
       val exampleMap: TiledMap = new TmxMapLoader().load("data/maps/mapTest1.tmx")
 
       //Custom map -> random each time
       tiledMap = createCustomMap(exampleMap)
 
       tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap)
-      val layers = tiledMap.getLayers
 
+      val layers = tiledMap.getLayers
       tiledLayer1 = layers.get(0).asInstanceOf[TiledMapTileLayer]
       tiledLayer2 = layers.get(1).asInstanceOf[TiledMapTileLayer]
 
@@ -89,6 +94,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     hero.animate(Gdx.graphics.getDeltaTime)
     hero.draw(g)
 
+    //Optional
     g.drawFPS()
     g.drawSchoolLogo()
   }
@@ -116,14 +122,26 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     }
   }
 
+  /**
+   * Changes tile at position x,y on map to new tile
+   * @param map1
+   * @param layer
+   *
+   * @param x - position
+   * @param y - position
+   * @param newID - ID of new Tile
+   */
   def changeTile(map1: TiledMap, layer: TiledMapTileLayer, x: Int, y: Int, newID: Int): Unit = {
     require(layer != null)
 
-    var cell = layer.getCell(x, y)
-    if (cell == null) {
-      cell = new Cell()
-      layer.setCell(x, y, cell)
-    }
+    //var cell = layer.getCell(x, y)
+//    if (cell == null) {
+//      cell = new Cell()
+//      layer.setCell(x, y, cell)
+//    }
+
+    var cell = new Cell()
+    layer.setCell(x,y,cell)
 
     val tileSet = map1.getTileSets.getTileSet(0)
     val newTile = tileSet.getTile(newID)
@@ -133,10 +151,15 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     }
   }
 
+  /**
+   * Create a custom map that is random each time based on the orinal map created on Tiled
+   * @param originalMap
+   * @return new map
+   */
   private def createCustomMap(originalMap: TiledMap): TiledMap = {
 
-    //tiles ID
-    var objectID = mutable.HashMap[String, Int](
+    //Object tiles ID
+    val objectID = mutable.HashMap[String, Int](
       "mirror" -> 202,
       "coins" -> 64,
       "chest" -> 103,
@@ -146,6 +169,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       "table" -> 244
     )
 
+    //Basic tiles ID
     val noneID = 0
     val groundID = 65
     val wallID = 23
@@ -153,7 +177,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     //Create a new TiledMap
     var newMap = new TiledMap()
 
-    //Get the tileset from the original map and add it to the new map
+    //Get the tilesets from the original map and add it to the new map
     val originalTileSet1 = originalMap.getTileSets.getTileSet(0)
     val originalTileSet2 = originalMap.getTileSets.getTileSet(1)
 
@@ -173,12 +197,35 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     newMap.getLayers.add(newLayer1)
     newMap.getLayers.add(newLayer2)
 
-    //place the tiles depending on the grid
+    //place the tiles depending on the given grid
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
         if(gridMap(i)(j) != 99 && gridMap(i)(j) != 0) {
           changeTile(newMap, newLayer1, i, j, groundID)
-        } else if(gridMap(i)(j) == 99){
+        }
+      }
+    }
+
+    //place objects -
+    // rooms even: mirror, chest, cauldron
+    // rooms uneven: jar, table, chair
+
+    for( i <- rooms.indices){
+      if(rooms(i).nb != 1){
+        if(rooms(i).nb % 2 == 0){
+          placeRandomObjects(newMap, newLayer1, objectID("mirror"), rooms(i))
+          placeRandomObjects(newMap, newLayer1, objectID("chest"), rooms(i))
+          placeRandomObjects(newMap, newLayer1, objectID("cauldron"), rooms(i))
+        } else {
+          placeRandomObjects(newMap, newLayer1, objectID("jar"), rooms(i))
+          placeRandomObjects(newMap, newLayer1, objectID("table"), rooms(i))
+        }
+      }
+    }
+
+    for(i <- gridMap.indices){
+      for(j <- gridMap(0).indices){
+        if(gridMap(i)(j) == 99){
           changeTile(newMap, newLayer1, i, j, wallID)
         } else if(gridMap(i)(j) == 0){
           changeTile(newMap, newLayer1, i, j, noneID)
@@ -186,34 +233,60 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       }
     }
 
-    //place objects
-    var leave: Boolean = false
 
-    for(i <- gridMap.indices){
-      for(j <- gridMap(0).indices){
-        if(gridMap(i)(j) != 99 && gridMap(i)(j) != 0){
-          if(gridMap(i)(j)%2 == 0){
-            changeTile(newMap, newLayer2, i, j, objectID("coins"))
+
+    return newMap
+  }
+
+
+  private def placeRandomObjects(map1: TiledMap, layer: TiledMapTileLayer, objectID: Int, room: Room): Unit = {
+    val rand = new Random()
+
+    // dimensions of room
+    val roomWidth = room.roomGrid.length
+    val roomHeight = room.roomGrid(0).length
+
+    // find room's coordinate in main grid
+    var roomX : Int = 0
+    var roomY : Int = 0
+    var leaveLoop: Boolean = true
+
+    while(leaveLoop){
+      for(i <- gridMap.indices){
+        for(j <- gridMap(0).indices){
+          if (gridMap(i)(j) == room.nb){
+            roomX = i
+            roomY = j
+            leaveLoop = false
           }
         }
       }
     }
 
-    return newMap
-  }
-
-  def placeObject(map1: TiledMap, layer: TiledMapTileLayer, objectID: Int, room: Room): Unit = {
-    var grid= room.roomGrid
-    //Random coordinates to place the object
-    var xRand = Random.nextInt(grid.length)
-    var yRand = Random.nextInt(grid(0).length)
+    // random coordinates to place object
+    val xRand = roomX + rand.nextInt(roomWidth)
+    val yRand = roomY + rand.nextInt(roomHeight)
 
     changeTile(map1, layer, xRand, yRand, objectID)
 
   }
 
+
+  def placePortal(map1: TiledMap, layer: TiledMapTileLayer, room: Room): Unit = {
+
+    for(i <- gridMap.indices){
+      for(j <- gridMap(0).indices){
+        if(gridMap(i)(j) == room.nb){
+
+        }
+      }
+    }
+
+
+  }
+
   /**
-   * Get the "walkable" property of the given tile.
+   * Get the "isWalkable" property of the given tile.
    *
    * @param tile
    *            The tile to know the property
@@ -269,7 +342,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
       // Is the move valid ?
       if (isWalkable(nextCell)) {
-        // Go
+        // Go to nextCell
         hero.setSpeed(getSpeed(nextCell))
         hero.go(goalDirection)
       } else {

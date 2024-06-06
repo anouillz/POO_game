@@ -26,6 +26,20 @@ class Hero extends Entity with DrawableObject {
   var newPosition: Vector2 = _
   var position: Vector2 = _
 
+  //Game charateristics
+  private var _health: Int = 10
+  private var _money: Int = 0
+
+  def health = _health
+  def health_=(newhealth: Int) = {
+    _health = newhealth
+  }
+
+  def money: Int = _money
+  def money_=(newMoney: Int) = {
+    _money = newMoney
+  }
+
 
   private var move = false
 
@@ -70,7 +84,7 @@ class Hero extends Entity with DrawableObject {
     val frameTime = FRAMETIME / speed
 
     position = new Vector2(lastPosition)
-    if (isMoving) {
+    if (isMoving()) {
       dt += elapsedTime.toFloat
       val alpha = (dt + frameTime * currentFrame) / (frameTime * nFrames)
       position.interpolate(newPosition, alpha, Interpolation.linear)
@@ -93,7 +107,7 @@ class Hero extends Entity with DrawableObject {
   /**
    * @return True if the hero is actually doing a step.
    */
-  def isMoving: Boolean = move
+  def isMoving(): Boolean = move
 
   /**
    * @param speed The new speed of the hero.
