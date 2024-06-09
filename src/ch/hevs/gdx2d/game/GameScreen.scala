@@ -17,17 +17,17 @@ import scala.util.control.Breaks.break
 
 
 
-class MapManager(var width: Int, var height: Int) extends PortableApplication(width, height) {
+class GameScreen(var width: Int, var height: Int) extends PortableApplication(width, height) {
 
   // key management
   private val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
 
-  // character
+  // characters
   private var hero: Hero = _
   private var enemy1: Enemy = _
   private var enemy2: Enemy = _
 
-  var gridPerso: MondrianRoomsWalls = new MondrianRoomsWalls
+  var gridPerso: generateRooms = new generateRooms
 
   //Create the grid and rooms necessary to create the map
   var gridMap = gridPerso.grid
@@ -35,6 +35,9 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   var rooms: ArrayBuffer[Room] = gridPerso.rooms
   gridPerso.placeWalls(gridMap)
   gridPerso.printGrid(gridMap)
+
+  //Portal Tiles:
+  var portalCoordinates: ArrayBuffer[(Int, Int)] = ArrayBuffer.empty
 
 
   // tiles management
@@ -52,7 +55,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     enemy1 = new Enemy (3,3)
     enemy2 = new Enemy (10,11)
     // Set initial zoom
-    zoom = 0.7f
+    zoom = 2f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -84,6 +87,9 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     // Hero activity
     manageHero()
+
+    // End of game
+    isEnd()
 
     // Camera follows the hero
     g.zoom(zoom)
@@ -219,16 +225,19 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     //place objects -
     // rooms even: mirror, chest, cauldron
     // rooms uneven: jar, table, chair
+    var randObj: Int = 0
 
-    for( i <- rooms.indices){
-      if(rooms(i).nb != 1){
-        if(rooms(i).nb % 2 == 0){
+    for (i <- rooms.indices){
+      if (rooms(i).nb != 1){
+        if (rooms(i).nb % 2 == 0){
           placeRandomObjects(newMap, newLayer1, objectID("mirror"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("chest"), rooms(i))
-          placeRandomObjects(newMap, newLayer1, objectID("cauldron"), rooms(i))
-        } else {
+        } else if (rooms(i).nb % 3 == 0) {
           placeRandomObjects(newMap, newLayer1, objectID("jar"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("table"), rooms(i))
+        } else if (rooms(i).nb % 5 == 0){
+          placeRandomObjects(newMap, newLayer1, objectID("chair"), rooms(i))
+          placeRandomObjects(newMap, newLayer1, objectID("cauldron"), rooms(i))
         }
       }
     }
@@ -250,7 +259,6 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     return newMap
   }
 
-
   private def placeRandomObjects(map1: TiledMap, layer: TiledMapTileLayer, objectID: Int, room: Room): Unit = {
     val rand = new Random()
 
@@ -263,29 +271,34 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     var roomY : Int = 0
     var leaveLoop: Boolean = false
 
-    for(i <- gridMap.indices){
-      for(j <- gridMap(0).indices){
+    var i: Int = 0
+    var j: Int = 0
+
+    while(!leaveLoop && i < gridMap.length){
+      while(!leaveLoop && j < gridMap(0).length){
         if (gridMap(i)(j) == room.nb){
           roomX = i
           roomY = j
           leaveLoop = true
         }
+        j += 1
       }
+      i += 1
+      j = 0
     }
 
     // random coordinates to place object
-    val xRand = roomX + rand.nextInt(roomWidth)
-    val yRand = roomY + rand.nextInt(roomHeight)
+    val xRand = roomX + 1 + rand.nextInt(roomWidth)
+    val yRand = roomY + 1 + rand.nextInt(roomHeight)
 
     changeTile(map1, layer, xRand, yRand, objectID)
 
   }
 
-
   private def placePortal(map1: TiledMap, portalID: Int): Unit = {
 
-    var layer1 = map1.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
-    var layer2 = map1.getLayers.get(1).asInstanceOf[TiledMapTileLayer]
+    val layer1 = map1.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
+    val layer2 = map1.getLayers.get(1).asInstanceOf[TiledMapTileLayer]
 
     var leaveLoop: Boolean = false
     var x: Int = 0
@@ -300,8 +313,6 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
         if(gridMap(i)(j) == 37){
           x = i
           y = j
-
-          println(s"X for portal: $x")
           leaveLoop = true
         }
         j += 1
@@ -311,15 +322,38 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     }
 
     //place portal
+    //put tile as a ground tile in case an object was occupying it
     changeTile(map1, layer2, x+2, y+2, portalID)
     changeTile(map1, layer1, x+2, y+2, 65)
+
     changeTile(map1, layer2, x+1, y+2, portalID)
     changeTile(map1, layer1, x+1, y+2, 65)
+
     changeTile(map1, layer2, x+2, y+1, portalID)
     changeTile(map1, layer1, x+2, y+1, 65)
+
     changeTile(map1, layer2, x+1, y+1, portalID)
     changeTile(map1, layer1, x+1, y+1, 65)
 
+    portalCoordinates.addOne((x+2, y+2))
+    portalCoordinates.addOne((x+1, y+2))
+    portalCoordinates.addOne((x+2, y+1))
+    portalCoordinates.addOne((x+1, y+1))
+
+
+  }
+
+  def isEnd(): Boolean = {
+    var heroPosition = hero.position
+
+    val heroX = (heroPosition.x.toInt / tiledLayer2.getTileWidth).toInt
+    val heroY = (heroPosition.y.toInt / tiledLayer2.getTileWidth).toInt
+
+    if(portalCoordinates.contains((heroX, heroY))){
+      Thread.sleep(1000)
+      return true
+    }
+    return false
   }
 
   /**
@@ -387,13 +421,13 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
         nextCell = getTile(hero.getPosition, 0, -1)
         vectorOffset = new Vector2(0,-32)
       }
-      println(s"Hero position ${hero.position}")
-      println(s"Enemy position ${enemy1.position}")
-      println(s"Offset position ${vectorOffset}")
-      println(isWalkable(nextCell))
+//      println(s"Hero position ${hero.position}")
+//      println(s"Enemy position ${enemy1.position}")
+//      println(s"Offset position ${vectorOffset}")
+     //println(isWalkable(nextCell))
       val nextPositionVector: Vector2 = new Vector2(hero.getPosition.x+vectorOffset.x, hero.getPosition.y+vectorOffset.y)
       // Is the move valid ?
-      if ((isWalkable(nextCell) && isOccupied(nextPositionVector))) {
+      if (isWalkable(nextCell) && isOccupied(nextPositionVector)) {
         // Go
         hero.setSpeed(getSpeed(nextCell))
         hero.go(goalDirection)
@@ -426,8 +460,8 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   }
 }
 
-object MapManager {
+object GameScreen {
   def main(args: Array[String]): Unit = {
-    new MapManager(700,700)
+    new GameScreen(700,700)
   }
 }

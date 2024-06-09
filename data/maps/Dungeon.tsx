@@ -34,7 +34,7 @@
  <tile id="65">
   <properties>
    <property name="isWalkable" type="bool" value="true"/>
-   <property name="speed" type="float" value="1.5"/>
+   <property name="speed" type="float" value="2.5"/>
   </properties>
  </tile>
  <tile id="102">

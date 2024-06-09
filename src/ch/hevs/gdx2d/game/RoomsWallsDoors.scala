@@ -49,22 +49,9 @@ class RoomsWallsDoors {
         attempts += 1
       }
     }
-
-    for (i <- 0 until rooms.length) {
-      for (j <- i + 1 until rooms.length) {
-        val (startX1, startY1, width1, height1) = rooms(i)
-        val (startX2, startY2, width2, height2) = rooms(j)
-
-        // Check if rooms are adjacent and place a door between them
-        if (roomsAreAdjacent(startX1, startY1, width1, height1, startX2, startY2, width2, height2)) {
-          placeDoorBetweenRooms(grid, startX1, startY1, width1, height1, startX2, startY2, width2, height2)
-        }
-      }
-    }
   }
 
   def findAdjacentPosition(grid: Array[Array[Int]], roomWidth: Int, roomHeight: Int, rooms: ArrayBuffer[(Int, Int, Int, Int)]): (Int, Int) = {
-    val rand = new Random()
 
     for ((startX, startY, width, height) <- rooms) {
       val directions = List((1, 0), (-1, 0), (0, 1), (0, -1))
@@ -77,7 +64,8 @@ class RoomsWallsDoors {
       }
     }
 
-    (-1, -1) // If no valid position is found
+    //if no valid position found
+    (0,0)
   }
 
   def isAdjacentToRoom(grid: Array[Array[Int]], startX: Int, startY: Int, width: Int, height: Int): Boolean = {
@@ -113,57 +101,7 @@ class RoomsWallsDoors {
     }
   }
 
-  def placeDoorBetweenRooms(grid: Array[Array[Int]], startX1: Int, startY1: Int, width1: Int, height1: Int, startX2: Int, startY2: Int, width2: Int, height2: Int): Unit = {
-    if (startX1 + width1 == startX2) {
-      // Rooms are adjacent horizontally, place door on the left side of the second room
-      placeDoor(grid, startX2, startY2 + height2 / 2, 1, 1)
-    } else if (startX2 + width2 == startX1) {
-      // Rooms are adjacent horizontally, place door on the right side of the first room
-      placeDoor(grid, startX1, startY1 + height1 / 2, 1, 1)
-    } else if (startY1 + height1 == startY2) {
-      // Rooms are adjacent vertically, place door on the top side of the second room
-      placeDoor(grid, startX2 + width2 / 2, startY2, 1, 1)
-    } else if (startY2 + height2 == startY1) {
-      // Rooms are adjacent vertically, place door on the bottom side of the first room
-      placeDoor(grid, startX1 + width1 / 2, startY1, 1, 1)
-    }
-  }
 
-
-  def placeDoor(grid: Array[Array[Int]], startX: Int, startY: Int, roomWidth: Int, roomHeight: Int): Unit = {
-    val rand = new Random()
-    val doorSide = rand.nextInt(4)
-    doorSide match {
-      case 0 =>
-        if (isAdjacentToRoom(grid, startX + rand.nextInt(roomWidth), startY - 1, 1, 1)) {
-          println(s"Door placed at position (${startX + rand.nextInt(roomWidth)}, ${startY - 1})")
-          grid(startY - 1)(startX + rand.nextInt(roomWidth)) = 98
-        }
-      case 1 =>
-        if (isAdjacentToRoom(grid, startX + roomWidth, startY + rand.nextInt(roomHeight), 1, 1)) {
-          println(s"Door placed at position (${startX + roomWidth}, ${startY + rand.nextInt(roomHeight)})")
-          grid(startY + rand.nextInt(roomHeight))(startX + roomWidth) = 98
-        }
-      case 2 =>
-        if (isAdjacentToRoom(grid, startX + rand.nextInt(roomWidth), startY + roomHeight, 1, 1)) {
-          println(s"Door placed at position (${startX + rand.nextInt(roomWidth)}, ${startY + roomHeight})")
-          grid(startY + roomHeight)(startX + rand.nextInt(roomWidth)) = 98
-        }
-      case 3 =>
-        if (isAdjacentToRoom(grid, startX - 1, startY + rand.nextInt(roomHeight), 1, 1)) {
-          println(s"Door placed at position (${startX - 1}, ${startY + rand.nextInt(roomHeight)})")
-          grid(startY + rand.nextInt(roomHeight))(startX - 1) = 98
-        }
-    }
-  }
-
-  def placeWalls(grid: Array[Array[Int]]): Unit = {
-    for (y <- grid.indices; x <- grid(y).indices) {
-      if (grid(y)(x) == 0 && hasAdjacentRoom(grid, x, y)) {
-        grid(y)(x) = 99
-      }
-    }
-  }
 
   def hasAdjacentRoom(grid: Array[Array[Int]], x: Int, y: Int): Boolean = {
     val directions = List((1, 0), (-1, 0), (0, 1), (0, -1))

@@ -3,13 +3,13 @@ package ch.hevs.gdx2d.game
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
-class MondrianRoomsWalls {
+class generateRooms {
 
   val width = 50
   val height = 30
   val maxRooms = 42
   val minRoomSize = 3
-  val maxRoomSize = 5
+  val maxRoomSize = 6
 
   var grid = Array.fill(width, height)(0)
 
