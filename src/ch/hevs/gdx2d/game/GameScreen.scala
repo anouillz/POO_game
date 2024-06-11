@@ -18,15 +18,15 @@ import scala.util.control.Breaks.break
 
 
 
-class MapManager(var width: Int, var height: Int) extends PortableApplication(width, height) {
+class GameScreen(var width: Int, var height: Int) extends PortableApplication(width, height) {
 
   // key management
   private val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
 
-  // character
+  // characters
   private var hero: Hero = _
 
-  var gridPerso: MondrianRoomsWalls = new MondrianRoomsWalls
+  var gridPerso: generateRooms = new generateRooms
 
   //Create the grid and rooms necessary to create the map
   var gridMap = gridPerso.grid
@@ -34,6 +34,9 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   var rooms: ArrayBuffer[Room] = gridPerso.rooms
   gridPerso.placeWalls(gridMap)
   gridPerso.printGrid(gridMap)
+
+  //Portal Tiles:
+  var portalCoordinates: ArrayBuffer[(Int, Int)] = ArrayBuffer.empty
 
 
  // tiles management
@@ -51,7 +54,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
 
     // Set initial zoom
-    zoom = 1.0f
+    zoom = 2f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -84,6 +87,9 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     // Hero activity
     manageHero()
     manageEnemy()
+
+    // End of game
+    isEnd()
 
     // Camera follows the hero
     g.zoom(zoom)
@@ -142,17 +148,20 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   def changeTile(map1: TiledMap, layer: TiledMapTileLayer, x: Int, y: Int, newID: Int): Unit = {
     require(layer != null)
 
-    //var cell = layer.getCell(x, y)
-//    if (cell == null) {
-//      cell = new Cell()
-//      layer.setCell(x, y, cell)
-//    }
+    var tileSet = map1.getTileSets.getTileSet(0)
+    var newTile = tileSet.getTile(newID)
 
-    var cell = new Cell()
+    val cell = new Cell()
     layer.setCell(x,y,cell)
 
-    val tileSet = map1.getTileSets.getTileSet(0)
-    val newTile = tileSet.getTile(newID)
+    if(newID < 270){
+      tileSet = map1.getTileSets.getTileSet(0)
+    } else {
+      tileSet = map1.getTileSets.getTileSet(1)
+
+    }
+    newTile = tileSet.getTile(newID)
+
 
     if (newTile != null) {
       cell.setTile(newTile) // Réutiliser l'ancienne tuile au lieu de créer une nouvelle pour garder les propriétés
@@ -217,16 +226,19 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     //place objects -
     // rooms even: mirror, chest, cauldron
     // rooms uneven: jar, table, chair
+    var randObj: Int = 0
 
-    for( i <- rooms.indices){
-      if(rooms(i).nb != 1){
-        if(rooms(i).nb % 2 == 0){
+    for (i <- rooms.indices){
+      if (rooms(i).nb != 1){
+        if (rooms(i).nb % 2 == 0){
           placeRandomObjects(newMap, newLayer1, objectID("mirror"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("chest"), rooms(i))
-          placeRandomObjects(newMap, newLayer1, objectID("cauldron"), rooms(i))
-        } else {
+        } else if (rooms(i).nb % 3 == 0) {
           placeRandomObjects(newMap, newLayer1, objectID("jar"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("table"), rooms(i))
+        } else if (rooms(i).nb % 5 == 0){
+          placeRandomObjects(newMap, newLayer1, objectID("chair"), rooms(i))
+          placeRandomObjects(newMap, newLayer1, objectID("cauldron"), rooms(i))
         }
       }
     }
@@ -241,9 +253,12 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       }
     }
 
+    //place portal in far room
+    //portal tile id : 562
+    placePortal(newMap, 562)
+
     return newMap
   }
-
 
   private def placeRandomObjects(map1: TiledMap, layer: TiledMapTileLayer, objectID: Int, room: Room): Unit = {
     val rand = new Random()
@@ -255,38 +270,78 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     // find room's coordinate in main grid
     var roomX : Int = 0
     var roomY : Int = 0
-    var leaveLoop: Boolean = true
+    var leaveLoop: Boolean = false
 
-    while(leaveLoop){
-      for(i <- gridMap.indices){
-        for(j <- gridMap(0).indices){
-          if (gridMap(i)(j) == room.nb){
-            roomX = i
-            roomY = j
-            leaveLoop = false
-          }
+    var i: Int = 0
+    var j: Int = 0
+
+    while(!leaveLoop && i < gridMap.length){
+      while(!leaveLoop && j < gridMap(0).length){
+        if (gridMap(i)(j) == room.nb){
+          roomX = i
+          roomY = j
+          leaveLoop = true
         }
+        j += 1
       }
+      i += 1
+      j = 0
     }
 
     // random coordinates to place object
-    val xRand = roomX + rand.nextInt(roomWidth)
-    val yRand = roomY + rand.nextInt(roomHeight)
+    val xRand = roomX + 1 + rand.nextInt(roomWidth)
+    val yRand = roomY + 1 + rand.nextInt(roomHeight)
 
     changeTile(map1, layer, xRand, yRand, objectID)
 
   }
 
+  private def placePortal(map1: TiledMap, portalID: Int): Unit = {
 
-  def placePortal(map1: TiledMap, layer: TiledMapTileLayer, room: Room): Unit = {
+    val layer1 = map1.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
+    val layer2 = map1.getLayers.get(1).asInstanceOf[TiledMapTileLayer]
 
-    for(i <- gridMap.indices){
-      for(j <- gridMap(0).indices){
-        if(gridMap(i)(j) == room.nb){
+    var leaveLoop: Boolean = false
+    var x: Int = 0
+    var y: Int = 0
 
+
+    var i: Int = 0
+    var j: Int = 0
+
+    while(!leaveLoop && i < gridMap.length){
+      while(!leaveLoop && j < gridMap(0).length){
+        if(gridMap(i)(j) == 37){
+          x = i
+          y = j
+          leaveLoop = true
         }
+        j += 1
       }
+      i += 1
+      j = 0
     }
+
+    //place portal
+    //put tile as a ground tile in case an object was occupying it
+    changeTile(map1, layer2, x+2, y+2, portalID)
+    changeTile(map1, layer1, x+2, y+2, 65)
+
+    changeTile(map1, layer2, x+1, y+2, portalID)
+    changeTile(map1, layer1, x+1, y+2, 65)
+
+    changeTile(map1, layer2, x+2, y+1, portalID)
+    changeTile(map1, layer1, x+2, y+1, 65)
+
+    changeTile(map1, layer2, x+1, y+1, portalID)
+    changeTile(map1, layer1, x+1, y+1, 65)
+
+    portalCoordinates.addOne((x+2, y+2))
+    portalCoordinates.addOne((x+1, y+2))
+    portalCoordinates.addOne((x+2, y+1))
+    portalCoordinates.addOne((x+1, y+1))
+
+
   }
 
   def placeRandomEnemy(map1: TiledMap, layer: TiledMapTileLayer, enemy : Enemy, room: Room) : Unit = {
@@ -308,13 +363,23 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
         }
       }
     }
-
     val xRand = roomX + rand.nextInt(roomWidth)
     val yRand = roomY + rand.nextInt(roomHeight)
-
     Enemy.genEnemy(xRand,yRand)
   }
 
+  def isEnd(): Boolean = {
+    var heroPosition = hero.position
+
+    val heroX = (heroPosition.x.toInt / tiledLayer2.getTileWidth).toInt
+    val heroY = (heroPosition.y.toInt / tiledLayer2.getTileWidth).toInt
+
+    if (portalCoordinates.contains((heroX, heroY))) {
+      Thread.sleep(1000)
+      return true
+    }
+    return false
+  }
 
   /**
    * Get the "isWalkable" property of the given tile.
@@ -386,9 +451,10 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
         nextCell = getTile(hero.getPosition, 0, -1)
         vectorOffset = new Vector2(0,-32)
       }
+
       val nextPositionVector: Vector2 = new Vector2(hero.getPosition.x+vectorOffset.x, hero.getPosition.y+vectorOffset.y)
       // Is the move valid ?
-      if ((isWalkable(nextCell) && isOccupiedEnemy(nextPositionVector))) {
+      if (isWalkable(nextCell) && isOccupiedEnemy(nextPositionVector)) {
         // Go
         hero.setSpeed(getSpeed(nextCell))
         hero.go(goalDirection)
@@ -457,8 +523,8 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   }
 }
 
-object MapManager {
+object GameScreen {
   def main(args: Array[String]): Unit = {
-    new MapManager(1920,1080)
+    new GameScreen(700,700)
   }
 }
