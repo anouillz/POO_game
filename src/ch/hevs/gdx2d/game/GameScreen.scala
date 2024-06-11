@@ -36,7 +36,7 @@ class GameScreen extends RenderingScreen{
   //End of game
   private var lostGame: Boolean = false
   private var wonGame: Boolean = false
-  var remainingTime: Int = 60
+  var remainingTime: Int = 90
 
   var font60: BitmapFont = _
   var font20: BitmapFont = _
@@ -96,7 +96,7 @@ class GameScreen extends RenderingScreen{
 
 
     // Set initial zoom
-    zoom = 2f
+    zoom = 0.3f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -145,7 +145,6 @@ class GameScreen extends RenderingScreen{
     manageHero()
     manageEnemy()
 
-
     // Camera follows the hero
     g.zoom(zoom)
     g.moveCamera(hero.getPosition.x, hero.getPosition.y, tiledLayer1.getWidth * tiledLayer1.getTileWidth, tiledLayer1.getHeight * tiledLayer1.getTileHeight)
@@ -163,26 +162,23 @@ class GameScreen extends RenderingScreen{
       e.draw(g)
     }
 
+    // to adapt to lostScreen and wonScreen
+    g.zoom(1f)
     // Affichez le temps restant à l'écran
-    g.drawStringCentered(70, s"Time left: $remainingTime", font20)
+    g.drawString(g.getCamera.position.x - 100, g.getCamera.position.y - 70, s"Time left: $remainingTime", font20)
+
+    g.moveCamera(50,5)
 
 
     gameWon()
 
 
     if (wonGame){
-      //font20.dispose()
-      println("Game won")
-      g.clear(Color.BLACK)
-      g.drawStringCentered(200, "You won !", font60)
+      Main.instance.s.transitionTo(3, ScreenManager.TransactionType.SLICE)
     }
 
     if (lostGame && !wonGame) {
-      // Si le jeu est terminé, affichez un écran noir avec le message "Game Over"
-      font20.dispose()
-      g.clear(Color.BLACK)
-      g.drawStringCentered(200, "Game Over", font60)
-
+      Main.instance.s.transitionTo(2, ScreenManager.TransactionType.SLICE)
     }
 
     //Optional
@@ -304,14 +300,14 @@ class GameScreen extends RenderingScreen{
     //place objects -
     // rooms even: mirror, chest, cauldron
     // rooms uneven: jar, table, chair
-    var randObj: Int = 0
 
     for (i <- rooms.indices){
-      if (rooms(i).nb != 1){
+      if (rooms(i).nb != 1) {
         if (rooms(i).nb % 2 == 0){
           placeRandomObjects(newMap, newLayer1, objectID("mirror"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("chest"), rooms(i))
         } else if (rooms(i).nb % 3 == 0) {
+          placeRandomEnemy(newMap, newLayer1, rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("jar"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("table"), rooms(i))
         } else if (rooms(i).nb % 5 == 0){
@@ -425,7 +421,7 @@ class GameScreen extends RenderingScreen{
 
 
 
-  def placeRandomEnemy(map1: TiledMap, layer: TiledMapTileLayer, enemy : Enemy, room: Room) : Unit = {
+  def placeRandomEnemy(map1: TiledMap, layer: TiledMapTileLayer, room: Room) : Unit = {
     val rand = new Random()
     val roomWidth = room.roomGrid.length
     val roomHeight = room.roomGrid(0).length

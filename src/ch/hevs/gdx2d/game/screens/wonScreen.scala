@@ -2,22 +2,15 @@ package ch.hevs.gdx2d.game.screens
 
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.lib.GdxGraphics
-import ch.hevs.gdx2d.lib.utils.Logger
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
-import com.badlogic.gdx.scenes.scene2d.{InputEvent, Stage}
-import com.badlogic.gdx.scenes.scene2d.ui.{Skin, TextButton, TextField}
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 
-class MenuScreen extends RenderingScreen{
-
-
+class wonScreen extends RenderingScreen{
   var font40: BitmapFont = _
-
 
   override def onInit(): Unit = {
 
@@ -30,20 +23,25 @@ class MenuScreen extends RenderingScreen{
     font40 = generator.generateFont(parameter)
     font40.setColor(Color.WHITE)
 
+
     generator.dispose()
 
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
+
     g.clear(Color.BLACK)
 
-    g.drawStringCentered(g.getScreenHeight/2, "Press 'Enter' to start", font40)
-    g.drawStringCentered(g.getScreenHeight/2 + 50, "Chicago - What's yours is mine", font40 )
+    g.drawStringCentered(g.getScreenHeight/2, "You Won !", font40)
+    g.drawStringCentered(g.getScreenHeight/2 - 50, "Press '1' to go back to menu", font40 )
 
     g.drawSchoolLogo()
     g.drawFPS()
   }
 
+  override def dispose(): Unit = {
+    super.dispose()
 
+  }
 
 }

@@ -2,18 +2,14 @@ package ch.hevs.gdx2d.game
 
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.desktop.PortableApplication
-import ch.hevs.gdx2d.game.screens.{EndingScreen, MenuScreen}
+import ch.hevs.gdx2d.game.screens.{MenuScreen, lostScreen, wonScreen}
 import ch.hevs.gdx2d.lib.{GdxGraphics, ScreenManager}
-import ch.hevs.gdx2d.lib.utils.Logger
 import com.badlogic.gdx.{Gdx, Input}
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.scenes.scene2d.{InputEvent, Stage}
-import com.badlogic.gdx.scenes.scene2d.ui.{Skin, TextButton}
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+
 
 import scala.collection.mutable
 
-class Main extends PortableApplication(700,700){
+class Main extends PortableApplication(1920,1080){
 
   // key management
   private val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
@@ -32,8 +28,8 @@ class Main extends PortableApplication(700,700){
     setTitle("Chicago - what's yours is mine")
     s.registerScreen(classOf[MenuScreen])
     s.registerScreen(classOf[GameScreen])
-    s.registerScreen(classOf[EndingScreen])
-
+    s.registerScreen(classOf[lostScreen])
+    s.registerScreen(classOf[wonScreen])
 
   }
 
@@ -76,12 +72,18 @@ class Main extends PortableApplication(700,700){
       s.transitionTo(1, ScreenManager.TransactionType.SMOOTH)
     }
 
+    if (keycode == Input.Keys.NUM_1) {
+      keyStatus.put(keycode, true)
+      s.transitionTo(0, ScreenManager.TransactionType.SLIDE)
+    }
+
   }
 
 }
 
 object Main {
+  var instance: Main = _
   def main(args: Array[String]): Unit = {
-    new Main
+    instance = new Main
   }
 }
