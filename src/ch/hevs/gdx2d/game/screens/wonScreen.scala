@@ -35,7 +35,6 @@ class wonScreen extends RenderingScreen{
     g.drawStringCentered(g.getScreenHeight/2, "You Won !", font40)
     g.drawStringCentered(g.getScreenHeight/2 - 50, "Press '1' to go back to menu", font40 )
 
-    g.drawSchoolLogo()
     g.drawFPS()
   }
 

@@ -28,7 +28,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   def onInit(): Unit = {
     setTitle("Game")
 
-    map = new TmxMapLoader().load("data/maps/mapTest1.tmx")
+    map = new TmxMapLoader().load("data/maps/map.tmx")
     tiledMapRenderer = new OrthogonalTiledMapRenderer(map)
     tiledLayer = map.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
   }

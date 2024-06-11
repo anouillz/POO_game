@@ -65,7 +65,7 @@ class TestGame extends PortableApplication(1920, 1080) {
     // create map
     try {
       //Original map with different tiles used to make our custom map
-      val exampleMap: TiledMap = new TmxMapLoader().load("data/maps/mapTest1.tmx")
+      val exampleMap: TiledMap = new TmxMapLoader().load("data/maps/map.tmx")
 
       //Custom map -> random each time
       tiledMap = createCustomMap(exampleMap)

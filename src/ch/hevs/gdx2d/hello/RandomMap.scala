@@ -24,7 +24,7 @@ class RandomMap(var width: Int, var height: Int) extends PortableApplication(wid
 
   override def onInit(): Unit = {
     setTitle("RandomMapTest")
-    map = new TmxMapLoader().load("data/maps/mapTest1.tmx")
+    map = new TmxMapLoader().load("data/maps/map.tmx")
     tiledMapRenderer = new OrthogonalTiledMapRenderer(map)
     tiledLayer = map.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
   }

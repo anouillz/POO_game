@@ -2,10 +2,9 @@ package ch.hevs.gdx2d.game
 
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.desktop.PortableApplication
-import ch.hevs.gdx2d.game.screens.{MenuScreen, lostScreen, wonScreen}
+import ch.hevs.gdx2d.game.screens.{MenuScreen, RulesScreen, lostScreen, wonScreen}
 import ch.hevs.gdx2d.lib.{GdxGraphics, ScreenManager}
 import com.badlogic.gdx.{Gdx, Input}
-
 
 import scala.collection.mutable
 
@@ -30,6 +29,7 @@ class Main extends PortableApplication(1920,1080){
     s.registerScreen(classOf[GameScreen])
     s.registerScreen(classOf[lostScreen])
     s.registerScreen(classOf[wonScreen])
+    s.registerScreen(classOf[RulesScreen])
 
   }
 
@@ -77,11 +77,17 @@ class Main extends PortableApplication(1920,1080){
       s.transitionTo(0, ScreenManager.TransactionType.SLIDE)
     }
 
+    if (keycode == Input.Keys.R) {
+      keyStatus.put(keycode, true)
+      s.transitionTo(4, ScreenManager.TransactionType.SMOOTH)
+    }
+
   }
 
 }
 
 object Main {
+  // instance to be able to access main from GameScreen
   var instance: Main = _
   def main(args: Array[String]): Unit = {
     instance = new Main

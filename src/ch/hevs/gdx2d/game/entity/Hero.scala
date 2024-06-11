@@ -1,6 +1,7 @@
 package ch.hevs.gdx2d.game
 
 import ch.hevs.gdx2d.components.bitmaps.{BitmapImage, Spritesheet}
+import ch.hevs.gdx2d.game.entity.Entity
 import ch.hevs.gdx2d.lib.GdxGraphics
 import ch.hevs.gdx2d.lib.interfaces.DrawableObject
 import com.badlogic.gdx.math.{Interpolation, Vector2}
@@ -27,10 +28,11 @@ class Hero extends Entity with DrawableObject {
   var position: Vector2 = _
 
   //Game charateristics
-  private var _health: Int = 10
+  private var _health: Int = 3
   private var _money: Int = 0
 
   def health = _health
+
   def health_=(newhealth: Int) = {
     _health = newhealth
   }

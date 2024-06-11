@@ -26,18 +26,17 @@ import scala.util.Random
 
 class GameScreen extends RenderingScreen{
 
-
-
   // key management
   private val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
 
   // characters
   private var hero: Hero = _
 
-  //End of game
+  //manage end of game
   private var lostGame: Boolean = false
   private var wonGame: Boolean = false
   var remainingTime: Int = 90
+  var portalEntryTime: Long = 0
 
   var font60: BitmapFont = _
   var font20: BitmapFont = _
@@ -65,8 +64,6 @@ class GameScreen extends RenderingScreen{
   private var footsteps: MusicPlayer = _
   private var winSound: MusicPlayer = _
   private var lostSound: MusicPlayer = _
-
-
 
  // tiles management
   private var tiledMap: TiledMap = _
@@ -105,9 +102,8 @@ class GameScreen extends RenderingScreen{
     // Create hero
     hero = new Hero(2, 2)
 
-
     // Set initial zoom
-    zoom = 0.3f
+    zoom = 2f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -118,7 +114,7 @@ class GameScreen extends RenderingScreen{
     // create map
     try {
       //Original map with different tiles used to make our custom map
-      val exampleMap: TiledMap = new TmxMapLoader().load("data/maps/mapTest1.tmx")
+      val exampleMap: TiledMap = new TmxMapLoader().load("data/maps/map.tmx")
 
       //Custom map -> random each time
       tiledMap = createCustomMap(exampleMap)
@@ -178,10 +174,9 @@ class GameScreen extends RenderingScreen{
     // to adapt to lostScreen and wonScreen
     g.zoom(1f)
     // Affichez le temps restant à l'écran
-    g.drawString(g.getCamera.position.x - 100, g.getCamera.position.y - 70, s"Time left: $remainingTime", font20)
+    g.drawString(g.getCamera.position.x - 250, g.getCamera.position.y - 70, s"Time left: $remainingTime s", font20)
 
-    g.moveCamera(50,5)
-
+    g.moveCamera(20,5)
 
     gameWon()
 
@@ -197,7 +192,6 @@ class GameScreen extends RenderingScreen{
 
     //Optional
     g.drawFPS()
-    g.drawSchoolLogo()
   }
 
 
@@ -321,7 +315,7 @@ class GameScreen extends RenderingScreen{
           placeRandomObjects(newMap, newLayer1, objectID("mirror"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("chest"), rooms(i))
         } else if (rooms(i).nb % 3 == 0) {
-          placeRandomEnemy(newMap, newLayer1, rooms(i))
+          placeRandomEnemy(rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("jar"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("table"), rooms(i))
         } else if (rooms(i).nb % 5 == 0){
@@ -331,6 +325,8 @@ class GameScreen extends RenderingScreen{
       }
     }
 
+
+    //place walls and emptiness
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
         if(gridMap(i)(j) == 99){
@@ -390,9 +386,9 @@ class GameScreen extends RenderingScreen{
     val layer2 = map1.getLayers.get(1).asInstanceOf[TiledMapTileLayer]
 
     var leaveLoop: Boolean = false
+
     var x: Int = 0
     var y: Int = 0
-
 
     var i: Int = 0
     var j: Int = 0
@@ -432,27 +428,37 @@ class GameScreen extends RenderingScreen{
 
   }
 
-  def placeRandomEnemy(map1: TiledMap, layer: TiledMapTileLayer, room: Room) : Unit = {
-    val rand = new Random()
-    val roomWidth = room.roomGrid.length
-    val roomHeight = room.roomGrid(0).length
+  def placeRandomEnemy(room: Room) : Unit = {
+    require(room.nb != 1)
+
+    var rand = new Random
+
+    val roomWidth: Int = room.roomGrid.length
+    val roomHeight: Int = room.roomGrid(0).length
     var roomX: Int = 0
     var roomY: Int = 0
-    var leaveLoop: Boolean = true
+    var leaveLoop: Boolean = false
 
-    while (leaveLoop) {
-      for (i <- gridMap.indices) {
-        for (j <- gridMap(0).indices) {
-          if (gridMap(i)(j) == room.nb) {
-            roomX = i
-            roomY = j
-            leaveLoop = false
-          }
+    var i: Int = 0
+    var j: Int = 0
+
+    while(!leaveLoop && i < gridMap.length){
+      while(!leaveLoop && j < gridMap(0).length){
+        if (gridMap(i)(j) == room.nb){
+          println(s"enemmy: i:$i j:$j")
+          roomX = i
+          roomY = j
+          leaveLoop = true
         }
+        j += 1
       }
+      i += 1
+      j = 0
     }
-    val xRand = roomX + rand.nextInt(roomWidth)
-    val yRand = roomY + rand.nextInt(roomHeight)
+
+    val xRand = roomX + 1 + rand.nextInt(roomWidth - 1)
+    val yRand = roomY + 1 + rand.nextInt(roomHeight - 1)
+
     Enemy.genEnemy(xRand,yRand)
   }
 
@@ -463,14 +469,13 @@ class GameScreen extends RenderingScreen{
     val heroY = (heroPosition.y.toInt / tiledLayer2.getTileWidth).toInt
 
     if(portalCoordinates.contains((heroX, heroY))){
-      Thread.sleep(2000)
-      println("won frist condition")
-      if(portalCoordinates.contains((heroX, heroY))){
-        println("won second condition")
+      if(portalEntryTime == 0){
+        portalEntryTime = System.currentTimeMillis()
+      } else if (System.currentTimeMillis() - portalEntryTime >= 2000)
         wonGame = true
-      }
+    } else {
+      portalEntryTime = 0
     }
-    return false
   }
 
 
@@ -506,14 +511,10 @@ class GameScreen extends RenderingScreen{
   }
 
   def enemySeeHero (position : Vector2, listEnemy : ArrayBuffer[Enemy]) : Boolean = {
-//    println(" ")
-//    println(position)
-//    println(" ")
+
     for (i <- listEnemy){
-      //println(i.getPosition)
+
       if (math.abs(position.x-i.getPosition.x)<2*32 && math.abs(position.y-i.getPosition.y)<2*32){
-        println(hero.getPosition)
-        println(s"Enemy that killed us: ${i.getPosition}")
         return true
       }
     }

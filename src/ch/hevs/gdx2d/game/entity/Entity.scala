@@ -1,8 +1,6 @@
-package ch.hevs.gdx2d.game
+package ch.hevs.gdx2d.game.entity
 
 import ch.hevs.gdx2d.components.bitmaps._
-import ch.hevs.gdx2d.lib.GdxGraphics
-import ch.hevs.gdx2d.lib.interfaces.DrawableObject
 import com.badlogic.gdx.math.Vector2
 
 trait Entity {

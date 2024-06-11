@@ -32,7 +32,7 @@ class RectangleTest(var width: Int, var height: Int) extends PortableApplication
     println("Camera initialized.")
 
     try {
-      val exampleMap: TiledMap = new TmxMapLoader().load("data/maps/mapTest1.tmx")
+      val exampleMap: TiledMap = new TmxMapLoader().load("data/maps/map.tmx")
       println("Original map loaded.")
 
       map = createRectangle(exampleMap, 5, 5)

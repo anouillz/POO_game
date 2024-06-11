@@ -1,5 +1,6 @@
 package ch.hevs.gdx2d.game.screens
 
+import ch.hevs.gdx2d.components.bitmaps.BitmapImage
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.lib.GdxGraphics
 import ch.hevs.gdx2d.lib.utils.Logger
@@ -17,9 +18,13 @@ class MenuScreen extends RenderingScreen{
 
 
   var font40: BitmapFont = _
+  var imgBitmap: BitmapImage = _
+
 
 
   override def onInit(): Unit = {
+
+    imgBitmap = new BitmapImage("data/images/menuImage.png")
 
     val optimusF: FileHandle = Gdx.files.internal("data/font/OptimusPrinceps.ttf")
 
@@ -35,12 +40,13 @@ class MenuScreen extends RenderingScreen{
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
-    g.clear(Color.BLACK)
+    g.clear(Color.DARK_GRAY)
 
-    g.drawStringCentered(g.getScreenHeight/2, "Press 'Enter' to start", font40)
-    g.drawStringCentered(g.getScreenHeight/2 + 50, "Chicago - What's yours is mine", font40 )
+    g.drawStringCentered(g.getScreenHeight/2 + 300, "Chicago - What's yours is mine", font40 )
+    g.drawPicture(g.getScreenWidth / 2, g.getScreenHeight / 2, imgBitmap)
+    g.drawStringCentered(g.getScreenHeight/2 - 200, "Press 'Enter' to start", font40)
+    g.drawStringCentered(g.getScreenHeight/2 - 300, "Press 'R' to see the rules", font40)
 
-    g.drawSchoolLogo()
     g.drawFPS()
   }
 

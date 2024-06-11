@@ -15,8 +15,6 @@ class lostScreen extends RenderingScreen{
 
   override def onInit(): Unit = {
 
-    println("in lost Screen")
-
     val optimusF: FileHandle = Gdx.files.internal("data/font/OptimusPrinceps.ttf")
 
     val generator: FreeTypeFontGenerator = new FreeTypeFontGenerator(optimusF)
@@ -26,7 +24,6 @@ class lostScreen extends RenderingScreen{
     font40 = generator.generateFont(parameter)
     font40.setColor(Color.WHITE)
 
-
     generator.dispose()
 
   }
@@ -35,12 +32,9 @@ class lostScreen extends RenderingScreen{
 
     g.clear(Color.BLACK)
 
-
     g.drawStringCentered(g.getScreenHeight/2, "You lost !", font40)
     g.drawStringCentered(g.getScreenHeight/2 - 50, "Press '1' to go back to menu", font40 )
 
-
-    g.drawSchoolLogo()
     g.drawFPS()
 
   }
