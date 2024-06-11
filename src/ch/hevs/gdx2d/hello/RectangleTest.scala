@@ -11,7 +11,7 @@ import com.badlogic.gdx.maps.tiled.{TiledMap, TiledMapTileLayer, TmxMapLoader}
 
 class RectangleTest(var width: Int, var height: Int) extends PortableApplication(width, height) {
 
-  println("GameScreen constructor called")
+  println("GameScreenTest constructor called")
 
   var map: TiledMap = _
   var tiledMapRenderer: OrthogonalTiledMapRenderer = _
@@ -128,7 +128,7 @@ class RectangleTest(var width: Int, var height: Int) extends PortableApplication
 
 object RectangleTest {
   def main(args: Array[String]): Unit = {
-    println("Starting GameScreen...")
+    println("Starting GameScreenTest...")
     new RectangleTest(800, 800)
   }
 }
