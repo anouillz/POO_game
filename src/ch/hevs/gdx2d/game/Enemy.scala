@@ -10,14 +10,14 @@ import scala.collection.mutable.ArrayBuffer
 
 class Enemy private extends Entity with DrawableObject {
   var name: String = "Enemy"
-  var spriteFile: String = "data/images/lumberjack_sheet32.png"
+  var spriteFile: String = "data/images/Enemy 05-1.png"
 
   var textureX = 0
   var textureY = 1
   var speed = 1f
   var dt = 0f
   var currentFrame = 0
-  var nFrames = 4
+  var nFrames = 3
 
   var ss: Spritesheet = _
 

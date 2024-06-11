@@ -1,5 +1,6 @@
 package ch.hevs.gdx2d.game
 
+import ch.hevs.gdx2d.components.audio.MusicPlayer
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.desktop.PortableApplication
 import ch.hevs.gdx2d.game
@@ -48,7 +49,7 @@ class GameScreen extends RenderingScreen{
   multiplexer.addProcessor(Gdx.input.getInputProcessor)
   Gdx.input.setInputProcessor(multiplexer)
 
-  private var gridPerso: generateRooms = new generateRooms
+  private val gridPerso: generateRooms = new generateRooms
 
   //Create the grid and rooms necessary to create the map
   var gridMap = gridPerso.grid
@@ -58,7 +59,13 @@ class GameScreen extends RenderingScreen{
   gridPerso.printGrid(gridMap)
 
   //Portal Tiles:
-  private var portalCoordinates: ArrayBuffer[(Int, Int)] = ArrayBuffer.empty
+  private val portalCoordinates: ArrayBuffer[(Int, Int)] = ArrayBuffer.empty
+
+  //manage sounds
+  private var footsteps: MusicPlayer = _
+  private var winSound: MusicPlayer = _
+  private var lostSound: MusicPlayer = _
+
 
 
  // tiles management
@@ -87,6 +94,11 @@ class GameScreen extends RenderingScreen{
     font20.setColor(Color.WHITE)
 
     generator.dispose()
+
+    //sound source
+    footsteps = new MusicPlayer("data/sound/footsteps-boots-short.mp3")
+    winSound = new MusicPlayer("data/sound/yay.mp3")
+    lostSound = new MusicPlayer("data/sound/boo.mp3")
 
 
 
@@ -174,10 +186,12 @@ class GameScreen extends RenderingScreen{
     gameWon()
 
     if (wonGame){
+      winSound.play()
       Main.instance.s.transitionTo(3, ScreenManager.TransactionType.SLICE)
     }
 
     if (lostGame && !wonGame) {
+      lostSound.play()
       Main.instance.s.transitionTo(2, ScreenManager.TransactionType.SLICE)
     }
 
@@ -417,6 +431,7 @@ class GameScreen extends RenderingScreen{
 
 
   }
+
   def placeRandomEnemy(map1: TiledMap, layer: TiledMapTileLayer, room: Room) : Unit = {
     val rand = new Random()
     val roomWidth = room.roomGrid.length
@@ -491,12 +506,14 @@ class GameScreen extends RenderingScreen{
   }
 
   def enemySeeHero (position : Vector2, listEnemy : ArrayBuffer[Enemy]) : Boolean = {
-    println(" ")
-    println(position)
-    println(" ")
+//    println(" ")
+//    println(position)
+//    println(" ")
     for (i <- listEnemy){
-      println(i.getPosition)
-      if (math.abs(position.x-i.getPosition.x)<2*32 && math.abs(position.x-i.getPosition.y)<2*32){
+      //println(i.getPosition)
+      if (math.abs(position.x-i.getPosition.x)<2*32 && math.abs(position.y-i.getPosition.y)<2*32){
+        println(hero.getPosition)
+        println(s"Enemy that killed us: ${i.getPosition}")
         return true
       }
     }
@@ -550,6 +567,7 @@ class GameScreen extends RenderingScreen{
       if (isWalkable(nextCell) && isOccupiedEnemy(nextPositionVector)) {
         // Go
         hero.setSpeed(getSpeed(nextCell))
+        footsteps.play()
         hero.go(goalDirection)
       } else {
         // Face the wall
