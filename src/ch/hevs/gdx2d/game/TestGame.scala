@@ -1,48 +1,32 @@
 package ch.hevs.gdx2d.game
 
-import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.desktop.PortableApplication
-import ch.hevs.gdx2d.lib.{GdxGraphics, ScreenManager}
-import com.badlogic.gdx.files.FileHandle
-import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.g2d.BitmapFont
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
-import com.badlogic.gdx.{Gdx, Input, InputAdapter, InputProcessor}
+import ch.hevs.gdx2d.game
+import ch.hevs.gdx2d.lib.GdxGraphics
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell
 import com.badlogic.gdx.maps.tiled._
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
+import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile
 import com.badlogic.gdx.math.Vector2
-import com.badlogic.gdx.utils.Timer
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
+import scala.util.control.Breaks.break
 
 
 
-class TestGame extends PortableApplication(700,700){
-
+class TestGame extends PortableApplication(1920, 1080) {
 
   // key management
-  val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
+  private val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
 
   // characters
   private var hero: Hero = _
-  private var enemy1: Enemy = _
-  private var enemy2: Enemy = _
 
-  //End of game
-  private var lostGame: Boolean = false
-  private var wonGame: Boolean = false
-  var remainingTime: Int = 30
-
-  var font40: BitmapFont = _
-  var font20: BitmapFont = _
-
-
-
-  private var gridPerso: generateRooms = new generateRooms
+  var gridPerso: generateRooms = new generateRooms
 
   //Create the grid and rooms necessary to create the map
   var gridMap = gridPerso.grid
@@ -52,7 +36,7 @@ class TestGame extends PortableApplication(700,700){
   gridPerso.printGrid(gridMap)
 
   //Portal Tiles:
-  private var portalCoordinates: ArrayBuffer[(Int, Int)] = ArrayBuffer.empty
+  var portalCoordinates: ArrayBuffer[(Int, Int)] = ArrayBuffer.empty
 
 
   // tiles management
@@ -65,32 +49,12 @@ class TestGame extends PortableApplication(700,700){
 
   override def onInit(): Unit = {
 
-
-    //manage fonts
-    val optimusF: FileHandle = Gdx.files.internal("data/font/OptimusPrinceps.ttf")
-
-    val generator: FreeTypeFontGenerator = new FreeTypeFontGenerator(optimusF)
-    val parameter: FreeTypeFontParameter = new FreeTypeFontParameter()
-
-    parameter.size = 40
-    font40 = generator.generateFont(parameter)
-    font40.setColor(Color.WHITE)
-
-    //font for remaining time
-    parameter.size = 20
-    font20 = generator.generateFont(parameter)
-    font20.setColor(Color.WHITE)
-
-    generator.dispose()
-
-
-
     // Create hero
     hero = new Hero(2, 2)
-    enemy1 = new Enemy (3,3)
-    enemy2 = new Enemy (10,11)
+
+
     // Set initial zoom
-    zoom = 2f
+    zoom = 0.3f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -115,68 +79,39 @@ class TestGame extends PortableApplication(700,700){
     } catch {
       case e: Exception => e.printStackTrace()
     }
-
-    // Créez un nouveau timer qui se déclenche chaque seconde
-    Timer.schedule(new Timer.Task(){
-      override def run(): Unit = {
-        // Décrémentez remainingTime chaque seconde
-        remainingTime -= 1
-        // Si le temps est écoulé, le joueur a perdu
-        if (remainingTime <= 0) {
-          lostGame = true
-        }
-      }
-    }, 1, 1) // Le deuxième argument est le délai avant le premier déclenchement, le troisième argument est l'intervalle entre chaque déclenchement
-
-
-
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
     g.clear()
+
     // Hero activity
     manageHero()
+    manageEnemy()
+
+    // End of game
+    isEnd()
+
     // Camera follows the hero
     g.zoom(zoom)
     g.moveCamera(hero.getPosition.x, hero.getPosition.y, tiledLayer1.getWidth * tiledLayer1.getTileWidth, tiledLayer1.getHeight * tiledLayer1.getTileHeight)
+
     // Render the tilemap
     tiledMapRenderer.setView(g.getCamera)
     tiledMapRenderer.render()
+
     // Draw the hero
     hero.animate(Gdx.graphics.getDeltaTime)
     hero.draw(g)
-    enemy1.animate(Gdx.graphics.getDeltaTime)
-    enemy1.draw(g)
-    enemy2.animate(Gdx.graphics.getDeltaTime)
-    enemy2.draw(g)
 
-
-
-    // Affichez le temps restant à l'écran
-    g.drawStringCentered(70, s"Time left: $remainingTime", font20)
-
-    if (lostGame || gameWon()){
-      font20.dispose()
-    }
-
-    if (gameWon()){
-      println("Game won")
-      g.clear(Color.BLACK)
-      g.drawStringCentered(200, "You won !", font40)
-    }
-
-    if (lostGame && !gameWon()) {
-      // Si le jeu est terminé, affichez un écran noir avec le message "Game Over"
-      println("Game lost")
-      g.clear(Color.BLACK)
-      g.drawStringCentered(200, "Game Over", font40)
+    for(e <- Enemy.enemyArray){
+      e.animate(Gdx.graphics.getDeltaTime)
+      e.draw(g)
     }
 
     //Optional
     g.drawFPS()
     g.drawSchoolLogo()
   }
-
 
   /**
    * exemple : getTile(myPosition,0,1) get the tile over myPosition
@@ -301,6 +236,7 @@ class TestGame extends PortableApplication(700,700){
         } else if (rooms(i).nb % 3 == 0) {
           placeRandomObjects(newMap, newLayer1, objectID("jar"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("table"), rooms(i))
+          placeRandomEnemy(newMap, newLayer1, rooms(i))
         } else if (rooms(i).nb % 5 == 0){
           placeRandomObjects(newMap, newLayer1, objectID("chair"), rooms(i))
           placeRandomObjects(newMap, newLayer1, objectID("cauldron"), rooms(i))
@@ -409,19 +345,39 @@ class TestGame extends PortableApplication(700,700){
 
   }
 
-  def gameWon(): Boolean = {
+  private def placeRandomEnemy(map1: TiledMap, layer: TiledMapTileLayer, room: Room) : Unit = {
+    val rand = new Random()
+    val roomWidth = room.roomGrid.length
+    val roomHeight = room.roomGrid(0).length
+    var roomX: Int = 0
+    var roomY: Int = 0
+    var leaveLoop: Boolean = true
+
+    while (leaveLoop) {
+      for (i <- gridMap.indices) {
+        for (j <- gridMap(0).indices) {
+          if (gridMap(i)(j) == room.nb) {
+            roomX = i
+            roomY = j
+            leaveLoop = false
+          }
+        }
+      }
+    }
+    val xRand = roomX + rand.nextInt(roomWidth)
+    val yRand = roomY + rand.nextInt(roomHeight)
+    Enemy.genEnemy(xRand,yRand)
+  }
+
+  def isEnd(): Boolean = {
     var heroPosition = hero.position
 
     val heroX = (heroPosition.x.toInt / tiledLayer2.getTileWidth).toInt
     val heroY = (heroPosition.y.toInt / tiledLayer2.getTileWidth).toInt
 
-    if(portalCoordinates.contains((heroX, heroY))){
-      Thread.sleep(2000)
-      println("won frist condition")
-      if(portalCoordinates.contains((heroX, heroY))){
-        println("won second condition")
-        return true
-      }
+    if (portalCoordinates.contains((heroX, heroY))) {
+      Thread.sleep(1000)
+      return true
     }
     return false
   }
@@ -444,10 +400,15 @@ class TestGame extends PortableApplication(700,700){
     return false
   }
 
-  def isOccupied(vector: Vector2) : Boolean = {
+  def isOccupiedEnemy(vector: Vector2) : Boolean = {
     for (enemy: Enemy <- Enemy.enemyArray){
       if (vector.x == enemy.position.x && vector.y == enemy.position.y) return false
     }
+    return true
+  }
+
+  def isOccupiedHero(vector : Vector2) : Boolean = {
+    if (vector.x == hero.position.x && vector.y == hero.position.y) return false
     return true
   }
 
@@ -467,7 +428,6 @@ class TestGame extends PortableApplication(700,700){
    * Manage the movements of the hero using the keyboard.
    */
   def manageHero(): Unit = {
-
     // Do nothing if hero is already moving
     if (!hero.isMoving) {
 
@@ -475,9 +435,6 @@ class TestGame extends PortableApplication(700,700){
       var nextCell: TiledMapTile = null
       var goalDirection: Hero.Direction.Value = Hero.Direction.NULL
       var vectorOffset : Vector2 = new Vector2(0,0)
-
-      println(keyStatus)
-
       if (keyStatus(Input.Keys.RIGHT)) {
         goalDirection = Hero.Direction.RIGHT
         nextCell = getTile(hero.getPosition, 1, 0)
@@ -498,7 +455,7 @@ class TestGame extends PortableApplication(700,700){
 
       val nextPositionVector: Vector2 = new Vector2(hero.getPosition.x+vectorOffset.x, hero.getPosition.y+vectorOffset.y)
       // Is the move valid ?
-      if (isWalkable(nextCell) && isOccupied(nextPositionVector)) {
+      if (isWalkable(nextCell) && isOccupiedEnemy(nextPositionVector)) {
         // Go
         hero.setSpeed(getSpeed(nextCell))
         hero.go(goalDirection)
@@ -509,6 +466,43 @@ class TestGame extends PortableApplication(700,700){
     }
   }
 
+  def manageEnemy(): Unit = {
+    for (i <- Enemy.enemyArray){
+      var nextCell: TiledMapTile = null
+      var goalDirection: Enemy.Direction.Value = Enemy.Direction.NULL
+      var vectorOffset: Vector2 = new Vector2(0, 0)
+      if (math.random()>0.99) {
+        if (math.random()<0.25){
+          goalDirection = Enemy.Direction.RIGHT
+          nextCell = getTile(i.getPosition, 1, 0)
+          vectorOffset = new Vector2(32,0)
+        } else if (math.random()>=0.25 && math.random()<0.50) {
+          goalDirection = Enemy.Direction.LEFT
+          nextCell = getTile(i.getPosition, -1, 0)
+          vectorOffset = new Vector2(32,0)
+        } else if (math.random() >= 0.50 && math.random() < 0.75) {
+          goalDirection = Enemy.Direction.UP
+          nextCell = getTile(i.getPosition, 0, 1)
+          vectorOffset = new Vector2(32,0)
+        } else if (math.random() >= 0.75 && math.random() < 1.00) {
+          goalDirection = Enemy.Direction.DOWN
+          nextCell = getTile(i.getPosition, 0, -1)
+          vectorOffset = new Vector2(32,0)
+        }
+        val nextPositionVector: Vector2 = new Vector2(i.getPosition.x+vectorOffset.x, i.getPosition.y+vectorOffset.y)
+        if ((isWalkable(nextCell) && isOccupiedHero(nextPositionVector) && isOccupiedEnemy(nextPositionVector))) {
+          // Go
+          i.setSpeed(getSpeed(nextCell))
+          i.go(goalDirection)
+        } else {
+          // Face the wall
+          i.turn(goalDirection)
+        }
+      }
+    }
+  }
+
+
   // Manage keyboard events
   override def onKeyUp(keycode: Int): Unit = {
     super.onKeyUp(keycode)
@@ -518,10 +512,17 @@ class TestGame extends PortableApplication(700,700){
   override def onKeyDown(keycode: Int): Unit = {
     super.onKeyDown(keycode)
 
-    println(s"Key $keycode down")
+    keycode match {
+      case Input.Keys.Z =>
+        zoom match {
+          case 1.0f => zoom = 0.5f
+          case 0.5f => zoom = 2.0f
+          case _ => zoom = 1.0f
+        }
+      case _ =>
+    }
     keyStatus.put(keycode, true)
   }
-
 }
 
 object TestGame {

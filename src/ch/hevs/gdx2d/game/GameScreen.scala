@@ -71,7 +71,6 @@ class GameScreen extends RenderingScreen{
 
   override def onInit(): Unit = {
 
-
     //manage fonts
     val optimusF: FileHandle = Gdx.files.internal("data/font/OptimusPrinceps.ttf")
 
@@ -133,15 +132,13 @@ class GameScreen extends RenderingScreen{
         }
       }
     }, 1, 1) // Le deuxième argument est le délai avant le premier déclenchement, le troisième argument est l'intervalle entre chaque déclenchement
-
-
-
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
     g.clear()
 
     // Hero activity
+
     manageHero()
     manageEnemy()
 
@@ -157,10 +154,14 @@ class GameScreen extends RenderingScreen{
     hero.animate(Gdx.graphics.getDeltaTime)
     hero.draw(g)
 
+    if (enemySeeHero(hero.getPosition, Enemy.enemyArray)) {
+      lostGame = true
+    }
     for(e <- Enemy.enemyArray){
       e.animate(Gdx.graphics.getDeltaTime)
       e.draw(g)
     }
+
 
     // to adapt to lostScreen and wonScreen
     g.zoom(1f)
@@ -171,7 +172,6 @@ class GameScreen extends RenderingScreen{
 
 
     gameWon()
-
 
     if (wonGame){
       Main.instance.s.transitionTo(3, ScreenManager.TransactionType.SLICE)
@@ -417,10 +417,6 @@ class GameScreen extends RenderingScreen{
 
 
   }
-
-
-
-
   def placeRandomEnemy(map1: TiledMap, layer: TiledMapTileLayer, room: Room) : Unit = {
     val rand = new Random()
     val roomWidth = room.roomGrid.length
@@ -494,6 +490,21 @@ class GameScreen extends RenderingScreen{
     return true
   }
 
+  def enemySeeHero (position : Vector2, listEnemy : ArrayBuffer[Enemy]) : Boolean = {
+    println(" ")
+    println(position)
+    println(" ")
+    for (i <- listEnemy){
+      println(i.getPosition)
+      if (math.abs(position.x-i.getPosition.x)<2*32 && math.abs(position.x-i.getPosition.y)<2*32){
+        return true
+      }
+    }
+
+
+    return false
+  }
+
   /**
    * Get the "speed" property of the given tile.
    *
@@ -512,7 +523,6 @@ class GameScreen extends RenderingScreen{
   def manageHero(): Unit = {
     // Do nothing if hero is already moving
     if (!hero.isMoving) {
-
       // Compute direction and next cell
       var nextCell: TiledMapTile = null
       var goalDirection: Hero.Direction.Value = Hero.Direction.NULL
@@ -562,11 +572,11 @@ class GameScreen extends RenderingScreen{
           goalDirection = Enemy.Direction.LEFT
           nextCell = getTile(i.getPosition, -1, 0)
           vectorOffset = new Vector2(32,0)
-        } else if (math.random() >= 0.25 && math.random() < 0.50) {
+        } else if (math.random() >= 0.50 && math.random() < 0.75) {
           goalDirection = Enemy.Direction.UP
           nextCell = getTile(i.getPosition, 0, 1)
           vectorOffset = new Vector2(32,0)
-        } else if (math.random() >= 0.25 && math.random() < 0.50) {
+        } else if (math.random() >= 0.75 && math.random() < 1) {
           goalDirection = Enemy.Direction.DOWN
           nextCell = getTile(i.getPosition, 0, -1)
           vectorOffset = new Vector2(32,0)

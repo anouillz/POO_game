@@ -131,18 +131,6 @@ class Enemy private extends Entity with DrawableObject {
     }
   }
 
-  def areadetection(direction : Enemy.Direction.Value): Vector2= {
-    var offset : Vector2 = new Vector2(0,0)
-    direction match {
-      case Enemy.Direction.RIGHT => offset.set(1,0)
-      case Enemy.Direction.LEFT => offset.set(-1,0)
-      case Enemy.Direction.UP => offset.set(0,1)
-      case Enemy.Direction.DOWN => offset.set(0,-1)
-      case _ =>
-    }
-    return offset
-  }
-
   /**
    * Draw the character on the graphic object.
    * @param g Graphic object.
