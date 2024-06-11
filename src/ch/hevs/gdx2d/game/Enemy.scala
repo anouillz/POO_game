@@ -8,9 +8,7 @@ import com.badlogic.gdx.math.{Interpolation, Vector2}
 
 import scala.collection.mutable.ArrayBuffer
 
-class Enemy extends Entity with DrawableObject {
-
-
+class Enemy private extends Entity with DrawableObject {
   var name: String = "Enemy"
   var spriteFile: String = "data/images/lumberjack_sheet32.png"
 
@@ -21,7 +19,6 @@ class Enemy extends Entity with DrawableObject {
   var currentFrame = 0
   var nFrames = 4
 
-
   var ss: Spritesheet = _
 
   var lastPosition: Vector2 = _
@@ -29,8 +26,6 @@ class Enemy extends Entity with DrawableObject {
   var position: Vector2 = _
 
   private var move = false
-
-  enemyArray += this
 
   /**
    * Create the enemy at the given start tile.
@@ -63,6 +58,7 @@ class Enemy extends Entity with DrawableObject {
    * @return the current position of the enemy on the map.
    */
   def getPosition: Vector2 = this.position
+
 
   /**
    * Update the position and the texture of the enemy.
@@ -135,6 +131,18 @@ class Enemy extends Entity with DrawableObject {
     }
   }
 
+  def areadetection(direction : Enemy.Direction.Value): Vector2= {
+    var offset : Vector2 = new Vector2(0,0)
+    direction match {
+      case Enemy.Direction.RIGHT => offset.set(1,0)
+      case Enemy.Direction.LEFT => offset.set(-1,0)
+      case Enemy.Direction.UP => offset.set(0,1)
+      case Enemy.Direction.DOWN => offset.set(0,-1)
+      case _ =>
+    }
+    return offset
+  }
+
   /**
    * Draw the character on the graphic object.
    * @param g Graphic object.
@@ -142,13 +150,24 @@ class Enemy extends Entity with DrawableObject {
   override def draw(g: GdxGraphics): Unit = {
     g.draw(ss.sprites(textureY)(currentFrame), position.x, position.y)
   }
-
-
 }
 
 object Enemy {
 
+  /**
+   * Factory method for an enemy, which is automatically added to the enemies list enemyArray
+   * @param x
+   * @param y
+   * @return the enemy created
+   */
+  def genEnemy(x: Int, y : Int) : Enemy = {
+    val e = new Enemy(x, y)
+    enemyArray += e
+    return e
+  }
+
   val enemyArray: ArrayBuffer[Enemy] = new ArrayBuffer()
+
   object Direction extends Enumeration {
     type Direction = Value
     val UP, DOWN, RIGHT, LEFT, NULL = Value

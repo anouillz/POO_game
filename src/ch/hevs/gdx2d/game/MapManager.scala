@@ -1,6 +1,7 @@
 package ch.hevs.gdx2d.game
 
 import ch.hevs.gdx2d.desktop.PortableApplication
+import ch.hevs.gdx2d.game
 import ch.hevs.gdx2d.lib.GdxGraphics
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
@@ -11,6 +12,7 @@ import com.badlogic.gdx.maps.tiled.tiles.StaticTiledMapTile
 import com.badlogic.gdx.math.Vector2
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 import scala.util.control.Breaks.break
 
@@ -23,8 +25,6 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
   // character
   private var hero: Hero = _
-  private var enemy1: Enemy = _
-  private var enemy2: Enemy = _
 
   var gridPerso: MondrianRoomsWalls = new MondrianRoomsWalls
 
@@ -36,7 +36,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
   gridPerso.printGrid(gridMap)
 
 
-  // tiles management
+ // tiles management
   private var tiledMap: TiledMap = _
   private var tiledMapRenderer: TiledMapRenderer = _
   private var tiledLayer1: TiledMapTileLayer = _
@@ -48,10 +48,10 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     // Create hero
     hero = new Hero(2, 2)
-    enemy1 = new Enemy (3,3)
-    enemy2 = new Enemy (10,11)
+
+
     // Set initial zoom
-    zoom = 0.7f
+    zoom = 1.0f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -83,6 +83,7 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
 
     // Hero activity
     manageHero()
+    manageEnemy()
 
     // Camera follows the hero
     g.zoom(zoom)
@@ -95,10 +96,11 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     // Draw the hero
     hero.animate(Gdx.graphics.getDeltaTime)
     hero.draw(g)
-    enemy1.animate(Gdx.graphics.getDeltaTime)
-    enemy1.draw(g)
-    enemy2.animate(Gdx.graphics.getDeltaTime)
-    enemy2.draw(g)
+
+    for(e <- Enemy.enemyArray){
+      e.animate(Gdx.graphics.getDeltaTime)
+      e.draw(g)
+    }
 
     //Optional
     g.drawFPS()
@@ -239,8 +241,6 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
       }
     }
 
-
-
     return newMap
   }
 
@@ -287,9 +287,34 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
         }
       }
     }
-
-
   }
+
+  def placeRandomEnemy(map1: TiledMap, layer: TiledMapTileLayer, enemy : Enemy, room: Room) : Unit = {
+    val rand = new Random()
+    val roomWidth = room.roomGrid.length
+    val roomHeight = room.roomGrid(0).length
+    var roomX: Int = 0
+    var roomY: Int = 0
+    var leaveLoop: Boolean = true
+
+    while (leaveLoop) {
+      for (i <- gridMap.indices) {
+        for (j <- gridMap(0).indices) {
+          if (gridMap(i)(j) == room.nb) {
+            roomX = i
+            roomY = j
+            leaveLoop = false
+          }
+        }
+      }
+    }
+
+    val xRand = roomX + rand.nextInt(roomWidth)
+    val yRand = roomY + rand.nextInt(roomHeight)
+
+    Enemy.genEnemy(xRand,yRand)
+  }
+
 
   /**
    * Get the "isWalkable" property of the given tile.
@@ -309,10 +334,15 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
     return false
   }
 
-  def isOccupied(vector: Vector2) : Boolean = {
+  def isOccupiedEnemy(vector: Vector2) : Boolean = {
     for (enemy: Enemy <- Enemy.enemyArray){
       if (vector.x == enemy.position.x && vector.y == enemy.position.y) return false
     }
+    return true
+  }
+
+  def isOccupiedHero(vector : Vector2) : Boolean = {
+    if (vector.x == hero.position.x && vector.y == hero.position.y) return false
     return true
   }
 
@@ -356,19 +386,51 @@ class MapManager(var width: Int, var height: Int) extends PortableApplication(wi
         nextCell = getTile(hero.getPosition, 0, -1)
         vectorOffset = new Vector2(0,-32)
       }
-      println(s"Hero position ${hero.position}")
-      println(s"Enemy position ${enemy1.position}")
-      println(s"Offset position ${vectorOffset}")
-      println(isWalkable(nextCell))
       val nextPositionVector: Vector2 = new Vector2(hero.getPosition.x+vectorOffset.x, hero.getPosition.y+vectorOffset.y)
       // Is the move valid ?
-      if ((isWalkable(nextCell) && isOccupied(nextPositionVector))) {
+      if ((isWalkable(nextCell) && isOccupiedEnemy(nextPositionVector))) {
         // Go
         hero.setSpeed(getSpeed(nextCell))
         hero.go(goalDirection)
       } else {
         // Face the wall
         hero.turn(goalDirection)
+      }
+    }
+  }
+
+  def manageEnemy(): Unit = {
+    for (i <- Enemy.enemyArray){
+      var nextCell: TiledMapTile = null
+      var goalDirection: Enemy.Direction.Value = Enemy.Direction.NULL
+      var vectorOffset: Vector2 = new Vector2(0, 0)
+      if (math.random()>0.99) {
+        if (math.random()<0.25){
+          goalDirection = Enemy.Direction.RIGHT
+          nextCell = getTile(i.getPosition, 1, 0)
+          vectorOffset = new Vector2(32,0)
+        } else if (math.random()>=0.25 && math.random()<0.50) {
+          goalDirection = Enemy.Direction.LEFT
+          nextCell = getTile(i.getPosition, -1, 0)
+          vectorOffset = new Vector2(32,0)
+        } else if (math.random() >= 0.25 && math.random() < 0.50) {
+          goalDirection = Enemy.Direction.UP
+          nextCell = getTile(i.getPosition, 0, 1)
+          vectorOffset = new Vector2(32,0)
+        } else if (math.random() >= 0.25 && math.random() < 0.50) {
+          goalDirection = Enemy.Direction.DOWN
+          nextCell = getTile(i.getPosition, 0, -1)
+          vectorOffset = new Vector2(32,0)
+        }
+        val nextPositionVector: Vector2 = new Vector2(i.getPosition.x+vectorOffset.x, i.getPosition.y+vectorOffset.y)
+        if ((isWalkable(nextCell) && isOccupiedHero(nextPositionVector) && isOccupiedEnemy(nextPositionVector))) {
+          // Go
+          i.setSpeed(getSpeed(nextCell))
+          i.go(goalDirection)
+        } else {
+          // Face the wall
+          i.turn(goalDirection)
+        }
       }
     }
   }
