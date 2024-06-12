@@ -12,14 +12,14 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFont
 
 class RulesScreen extends RenderingScreen{
 
-  var imgPortal: BitmapImage = _
-  var imgEnemy: BitmapImage = _
+  private var imgPortal: BitmapImage = _
+  private var imgEnemy: BitmapImage = _
 
   var font40: BitmapFont = _
 
-  var goal: String = "1/ Your goal is to find the red portal to escape"
-  var beware: String = "2/ Beware of the guards, they might kill you"
-  var time: String = "3/ You have 60 seconds to escape"
+  private val goal: String = "1/ Your goal is to find the red portal to escape"
+  private val beware: String = "2/ Beware of the guards, they might kill you"
+  private val time: String = "3/ You have 60 seconds to escape"
 
 
   override def onInit(): Unit = {
@@ -36,8 +36,6 @@ class RulesScreen extends RenderingScreen{
     font40.setColor(Color.WHITE)
 
     generator.dispose()
-
-
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {

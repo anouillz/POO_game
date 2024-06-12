@@ -13,7 +13,6 @@ class wonScreen extends RenderingScreen{
   var font40: BitmapFont = _
 
   override def onInit(): Unit = {
-
     val optimusF: FileHandle = Gdx.files.internal("data/font/OptimusPrinceps.ttf")
 
     val generator: FreeTypeFontGenerator = new FreeTypeFontGenerator(optimusF)
@@ -23,13 +22,10 @@ class wonScreen extends RenderingScreen{
     font40 = generator.generateFont(parameter)
     font40.setColor(Color.WHITE)
 
-
     generator.dispose()
-
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
-
     g.clear(Color.BLACK)
 
     g.drawStringCentered(g.getScreenHeight/2, "You Won !", font40)
@@ -40,7 +36,6 @@ class wonScreen extends RenderingScreen{
 
   override def dispose(): Unit = {
     super.dispose()
-
   }
 
 }

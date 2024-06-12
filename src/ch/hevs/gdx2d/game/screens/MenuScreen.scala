@@ -3,27 +3,19 @@ package ch.hevs.gdx2d.game.screens
 import ch.hevs.gdx2d.components.bitmaps.BitmapImage
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.lib.GdxGraphics
-import ch.hevs.gdx2d.lib.utils.Logger
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
-import com.badlogic.gdx.scenes.scene2d.{InputEvent, Stage}
-import com.badlogic.gdx.scenes.scene2d.ui.{Skin, TextButton, TextField}
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 
 class MenuScreen extends RenderingScreen{
 
-
   var font40: BitmapFont = _
-  var imgBitmap: BitmapImage = _
-
-
+  private var imgBitmap: BitmapImage = _
 
   override def onInit(): Unit = {
-
     imgBitmap = new BitmapImage("data/images/menuImage.png")
 
     val optimusF: FileHandle = Gdx.files.internal("data/font/OptimusPrinceps.ttf")
@@ -36,7 +28,6 @@ class MenuScreen extends RenderingScreen{
     font40.setColor(Color.WHITE)
 
     generator.dispose()
-
   }
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
