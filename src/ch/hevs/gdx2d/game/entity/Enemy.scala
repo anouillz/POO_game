@@ -1,8 +1,6 @@
-package ch.hevs.gdx2d.game
+package ch.hevs.gdx2d.game.entity
 
-import ch.hevs.gdx2d.components.bitmaps.{BitmapImage, Spritesheet}
-import ch.hevs.gdx2d.game.Enemy.enemyArray
-import ch.hevs.gdx2d.game.entity.Entity
+import ch.hevs.gdx2d.components.bitmaps.Spritesheet
 import ch.hevs.gdx2d.lib.GdxGraphics
 import ch.hevs.gdx2d.lib.interfaces.DrawableObject
 import com.badlogic.gdx.math.{Interpolation, Vector2}
@@ -152,7 +150,7 @@ object Enemy {
   def genEnemy(x: Int, y : Int) : Enemy = {
     val e = new Enemy(x, y)
     enemyArray += e
-    return e
+    e
   }
 
   val enemyArray: ArrayBuffer[Enemy] = new ArrayBuffer()

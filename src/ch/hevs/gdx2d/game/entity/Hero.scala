@@ -1,10 +1,11 @@
-package ch.hevs.gdx2d.game
+package ch.hevs.gdx2d.game.entity
 
-import ch.hevs.gdx2d.components.bitmaps.{BitmapImage, Spritesheet}
-import ch.hevs.gdx2d.game.entity.Entity
+import ch.hevs.gdx2d.components.bitmaps.Spritesheet
 import ch.hevs.gdx2d.lib.GdxGraphics
 import ch.hevs.gdx2d.lib.interfaces.DrawableObject
 import com.badlogic.gdx.math.{Interpolation, Vector2}
+
+import scala.annotation.unused
 
 class Hero extends Entity with DrawableObject {
 
@@ -27,17 +28,22 @@ class Hero extends Entity with DrawableObject {
   var newPosition: Vector2 = _
   var position: Vector2 = _
 
-  //Game charateristics
+  //hero charateristics
   private var _health: Int = 3
   private var _money: Int = 0
 
+  //Not implemented yet
+  @unused
   def health = _health
-
+  @unused
   def health_=(newhealth: Int) = {
     _health = newhealth
   }
 
+  //Not implemented yet
+  @unused
   def money: Int = _money
+  @unused
   def money_=(newMoney: Int) = {
     _money = newMoney
   }
@@ -85,7 +91,7 @@ class Hero extends Entity with DrawableObject {
     val frameTime = FRAMETIME / speed
 
     position = new Vector2(lastPosition)
-    if (isMoving()) {
+    if (isMoving) {
       dt += elapsedTime.toFloat
       val alpha = (dt + frameTime * currentFrame) / (frameTime * nFrames)
       position.interpolate(newPosition, alpha, Interpolation.linear)
@@ -108,7 +114,7 @@ class Hero extends Entity with DrawableObject {
   /**
    * @return True if the hero is actually doing a step.
    */
-  def isMoving(): Boolean = move
+  def isMoving: Boolean = move
 
   /**
    * @param speed The new speed of the hero.

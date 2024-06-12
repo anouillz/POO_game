@@ -3,8 +3,8 @@ package ch.hevs.gdx2d.game.screens
 import ch.hevs.gdx2d.components.audio.MusicPlayer
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.game.rooms.{Room, generateRooms}
-import ch.hevs.gdx2d.game.{Enemy, Hero}
 import ch.hevs.gdx2d.game.Main
+import ch.hevs.gdx2d.game.entity.{Enemy, Hero}
 import ch.hevs.gdx2d.lib.{GdxGraphics, ScreenManager}
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Color
@@ -18,7 +18,6 @@ import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.utils.Timer
-
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
@@ -102,8 +101,8 @@ class GameScreen extends RenderingScreen{
     //create hero in room number 1
     hero = new Hero(2,2)
 
-    //initial zoom, has to be small so the game isnt too easy
-    zoom = 2f
+    //initial zoom, has to be small so the game isnt too easy, ideal: 0.3f
+    zoom = 0.3f
 
     //init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -140,7 +139,6 @@ class GameScreen extends RenderingScreen{
       }
     }, 1, 1) //parameters: task, delaySeconds, intervalSeconds
   }
-
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
     g.clear()
@@ -200,7 +198,6 @@ class GameScreen extends RenderingScreen{
     //Optional
     g.drawFPS()
   }
-
 
   /**
    * exemple : getTile(myPosition,0,1) get the tile over myPosition
@@ -432,7 +429,6 @@ class GameScreen extends RenderingScreen{
     portalCoordinates.addOne((x+1, y+2))
     portalCoordinates.addOne((x+2, y+1))
     portalCoordinates.addOne((x+1, y+1))
-
 
   }
 

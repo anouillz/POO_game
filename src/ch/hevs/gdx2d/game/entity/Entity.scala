@@ -25,7 +25,7 @@ trait Entity {
 
   def animate(elsapsedTime: Double): Unit
 
-  def isMoving(): Boolean
+  def isMoving: Boolean
 
 
 
