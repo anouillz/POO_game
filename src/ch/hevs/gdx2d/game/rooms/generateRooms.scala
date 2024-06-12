@@ -1,4 +1,4 @@
-package ch.hevs.gdx2d.game
+package ch.hevs.gdx2d.game.rooms
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
@@ -7,7 +7,7 @@ class generateRooms {
 
   val width = 50
   val height = 30
-  val maxRooms = 42
+  val maxRooms = 43
   val minRoomSize = 3
   val maxRoomSize = 6
 

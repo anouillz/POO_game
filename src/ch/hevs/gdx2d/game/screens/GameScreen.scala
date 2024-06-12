@@ -4,6 +4,7 @@ import ch.hevs.gdx2d.components.audio.MusicPlayer
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.desktop.PortableApplication
 import ch.hevs.gdx2d.game
+import ch.hevs.gdx2d.game.rooms.{Room, generateRooms}
 import ch.hevs.gdx2d.lib.{GdxGraphics, ScreenManager}
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Color
@@ -97,13 +98,11 @@ class GameScreen extends RenderingScreen{
     winSound = new MusicPlayer("data/sound/yay.mp3")
     lostSound = new MusicPlayer("data/sound/boo.mp3")
 
-
-
     // Create hero
     hero = new Hero(2, 2)
 
     // Set initial zoom
-    zoom = 2f
+    zoom = 1f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -175,7 +174,7 @@ class GameScreen extends RenderingScreen{
     g.zoom(1f)
     // Affichez le temps restant à l'écran
     g.drawString(g.getCamera.position.x - 250, g.getCamera.position.y - 70, s"Time left: $remainingTime s", font20)
-
+    // move camera to adapt to next screens
     g.moveCamera(20,5)
 
     gameWon()
@@ -445,7 +444,6 @@ class GameScreen extends RenderingScreen{
     while(!leaveLoop && i < gridMap.length){
       while(!leaveLoop && j < gridMap(0).length){
         if (gridMap(i)(j) == room.nb){
-          println(s"enemmy: i:$i j:$j")
           roomX = i
           roomY = j
           leaveLoop = true
@@ -462,7 +460,7 @@ class GameScreen extends RenderingScreen{
     Enemy.genEnemy(xRand,yRand)
   }
 
-  def gameWon(): Unit = {
+  private def gameWon(): Unit = {
     var heroPosition = hero.position
 
     val heroX = (heroPosition.x.toInt / tiledLayer2.getTileWidth).toInt
@@ -510,7 +508,7 @@ class GameScreen extends RenderingScreen{
     return true
   }
 
-  def enemySeeHero (position : Vector2, listEnemy : ArrayBuffer[Enemy]) : Boolean = {
+  private def enemySeeHero(position : Vector2, listEnemy : ArrayBuffer[Enemy]) : Boolean = {
 
     for (i <- listEnemy){
 

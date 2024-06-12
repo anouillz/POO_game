@@ -42,7 +42,7 @@ class MenuScreen extends RenderingScreen{
   override def onGraphicRender(g: GdxGraphics): Unit = {
     g.clear(Color.DARK_GRAY)
 
-    g.drawStringCentered(g.getScreenHeight/2 + 300, "Chicago - What's yours is mine", font40 )
+    g.drawStringCentered(g.getScreenHeight/2 + 300, "Chicago - What's mine is yours", font40 )
     g.drawPicture(g.getScreenWidth / 2, g.getScreenHeight / 2, imgBitmap)
     g.drawStringCentered(g.getScreenHeight/2 - 200, "Press 'Enter' to start", font40)
     g.drawStringCentered(g.getScreenHeight/2 - 300, "Press 'R' to see the rules", font40)

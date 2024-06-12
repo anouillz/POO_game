@@ -24,7 +24,7 @@ class Main extends PortableApplication(1920,1080){
 
   override def onInit(): Unit = {
 
-    setTitle("Chicago - what's yours is mine")
+    setTitle("Chicago - what's mine is yours")
     s.registerScreen(classOf[MenuScreen])
     s.registerScreen(classOf[GameScreen])
     s.registerScreen(classOf[lostScreen])
@@ -70,6 +70,7 @@ class Main extends PortableApplication(1920,1080){
     if (keycode == Input.Keys.ENTER) {
       keyStatus.put(keycode, true)
       s.transitionTo(1, ScreenManager.TransactionType.SMOOTH)
+
     }
 
     if (keycode == Input.Keys.NUM_1) {
