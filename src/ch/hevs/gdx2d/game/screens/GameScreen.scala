@@ -36,7 +36,7 @@ class GameScreen extends RenderingScreen{
   //manage end of game
   private var lostGame: Boolean = false
   private var wonGame: Boolean = false
-  var remainingTime: Int = 90
+  var remainingTime: Int = 60
   var portalEntryTime: Long = 0
 
   var font60: BitmapFont = _
@@ -82,7 +82,7 @@ class GameScreen extends RenderingScreen{
     val generator: FreeTypeFontGenerator = new FreeTypeFontGenerator(optimusF)
     val parameter: FreeTypeFontParameter = new FreeTypeFontParameter()
 
-    parameter.size = 60
+    parameter.size = 80
     font60 = generator.generateFont(parameter)
     font60.setColor(Color.WHITE)
 
@@ -102,7 +102,7 @@ class GameScreen extends RenderingScreen{
     hero = new Hero(2, 2)
 
     // Set initial zoom
-    zoom = 1f
+    zoom = 0.2f
 
     // init keys status
     keyStatus.put(Input.Keys.UP, false)
@@ -173,7 +173,7 @@ class GameScreen extends RenderingScreen{
     // to adapt to lostScreen and wonScreen
     g.zoom(1f)
     // Affichez le temps restant à l'écran
-    g.drawString(g.getCamera.position.x - 250, g.getCamera.position.y - 70, s"Time left: $remainingTime s", font20)
+    g.drawString(g.getCamera.position.x - 150, g.getCamera.position.y - 70, s"Time left: $remainingTime s", font20)
     // move camera to adapt to next screens
     g.moveCamera(20,5)
 

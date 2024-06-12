@@ -19,7 +19,7 @@ class RulesScreen extends RenderingScreen{
 
   var goal: String = "1/ Your goal is to find the red portal to escape"
   var beware: String = "2/ Beware of the guards, they might kill you"
-  var time: String = "3/ You have 90 seconds"
+  var time: String = "3/ You have 60 seconds to escape"
 
 
   override def onInit(): Unit = {
@@ -31,7 +31,7 @@ class RulesScreen extends RenderingScreen{
     val generator: FreeTypeFontGenerator = new FreeTypeFontGenerator(optimusF)
     val parameter: FreeTypeFontParameter = new FreeTypeFontParameter()
 
-    parameter.size = 40
+    parameter.size = 60
     font40 = generator.generateFont(parameter)
     font40.setColor(Color.WHITE)
 
