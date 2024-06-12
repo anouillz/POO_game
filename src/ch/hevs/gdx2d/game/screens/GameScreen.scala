@@ -1,18 +1,18 @@
-package ch.hevs.gdx2d.game
+package ch.hevs.gdx2d.game.screens
 
 import ch.hevs.gdx2d.components.audio.MusicPlayer
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
-import ch.hevs.gdx2d.desktop.PortableApplication
-import ch.hevs.gdx2d.game
 import ch.hevs.gdx2d.game.rooms.{Room, generateRooms}
+import ch.hevs.gdx2d.game.{Enemy, Hero}
+import ch.hevs.gdx2d.game.Main
 import ch.hevs.gdx2d.lib.{GdxGraphics, ScreenManager}
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
-import com.badlogic.gdx.{Gdx, Input, InputAdapter, InputMultiplexer, InputProcessor}
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell
+import com.badlogic.gdx.{Gdx, Input, InputMultiplexer}
 import com.badlogic.gdx.maps.tiled._
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
 import com.badlogic.gdx.math.Vector2
@@ -28,37 +28,37 @@ import scala.util.Random
 class GameScreen extends RenderingScreen{
 
   // key management
-  private val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
+  val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
 
   // characters
-  private var hero: Hero = _
+  var hero: Hero = _
 
   //manage end of game
   private var lostGame: Boolean = false
   private var wonGame: Boolean = false
-  var remainingTime: Int = 60
-  var portalEntryTime: Long = 0
+  private var remainingTime: Int = 60
+  private var portalEntryTime: Long = 0
 
-  var font60: BitmapFont = _
-  var font20: BitmapFont = _
+  //manage fonts
+  private var  font80: BitmapFont = _
+  private var font20: BitmapFont = _
 
   //screen management:
-  var stage = new Stage()
-  val multiplexer: InputMultiplexer = new InputMultiplexer()
+  private val stage = new Stage()
+  private val multiplexer: InputMultiplexer = new InputMultiplexer()
   multiplexer.addProcessor(stage)
   multiplexer.addProcessor(Gdx.input.getInputProcessor)
   Gdx.input.setInputProcessor(multiplexer)
 
+  //Grid that will represent the map
   private val gridPerso: generateRooms = new generateRooms
-
-  //Create the grid and rooms necessary to create the map
-  var gridMap = gridPerso.grid
+  private val gridMap = gridPerso.grid
   gridPerso.generateRooms(gridMap)
   var rooms: ArrayBuffer[Room] = gridPerso.rooms
   gridPerso.placeWalls(gridMap)
-  gridPerso.printGrid(gridMap)
 
   //Portal Tiles:
+  private val portalID: Int = 562
   private val portalCoordinates: ArrayBuffer[(Int, Int)] = ArrayBuffer.empty
 
   //manage sounds
@@ -68,23 +68,24 @@ class GameScreen extends RenderingScreen{
 
  // tiles management
   private var tiledMap: TiledMap = _
-  private var tiledMapRenderer: TiledMapRenderer = _
+  var tiledMapRenderer: TiledMapRenderer = _
+  // we have two layers
   private var tiledLayer1: TiledMapTileLayer = _
   private var tiledLayer2: TiledMapTileLayer = _
-  private var zoom: Float = _
+  var zoom: Float = _
 
 
   override def onInit(): Unit = {
 
-    //manage fonts
+    //fonts
     val optimusF: FileHandle = Gdx.files.internal("data/font/OptimusPrinceps.ttf")
 
     val generator: FreeTypeFontGenerator = new FreeTypeFontGenerator(optimusF)
     val parameter: FreeTypeFontParameter = new FreeTypeFontParameter()
 
     parameter.size = 80
-    font60 = generator.generateFont(parameter)
-    font60.setColor(Color.WHITE)
+    font80 = generator.generateFont(parameter)
+    font80.setColor(Color.WHITE)
 
     //font for remaining time
     parameter.size = 20
@@ -98,24 +99,24 @@ class GameScreen extends RenderingScreen{
     winSound = new MusicPlayer("data/sound/yay.mp3")
     lostSound = new MusicPlayer("data/sound/boo.mp3")
 
-    // Create hero
-    hero = new Hero(2, 2)
+    //create hero in room number 1
+    hero = new Hero(2,2)
 
-    // Set initial zoom
-    zoom = 0.2f
+    //initial zoom, has to be small so the game isnt too easy
+    zoom = 2f
 
-    // init keys status
+    //init keys status
     keyStatus.put(Input.Keys.UP, false)
     keyStatus.put(Input.Keys.DOWN, false)
     keyStatus.put(Input.Keys.LEFT, false)
     keyStatus.put(Input.Keys.RIGHT, false)
 
-    // create map
+    //create map
     try {
-      //Original map with different tiles used to make our custom map
+      //original map with different tiles used to make our custom map
       val exampleMap: TiledMap = new TmxMapLoader().load("data/maps/map.tmx")
 
-      //Custom map -> random each time
+      //custom map -> random each time
       tiledMap = createCustomMap(exampleMap)
 
       tiledMapRenderer = new OrthogonalTiledMapRenderer(tiledMap)
@@ -128,28 +129,27 @@ class GameScreen extends RenderingScreen{
       case e: Exception => e.printStackTrace()
     }
 
-    // Créez un nouveau timer qui se déclenche chaque seconde
+    //create a timer that goes from remainingTime to 0
     Timer.schedule(new Timer.Task(){
       override def run(): Unit = {
-        // Décrémentez remainingTime chaque seconde
+        //decrement each second
         remainingTime -= 1
-        // Si le temps est écoulé, le joueur a perdu
         if (remainingTime <= 0) {
           lostGame = true
         }
       }
-    }, 1, 1) // Le deuxième argument est le délai avant le premier déclenchement, le troisième argument est l'intervalle entre chaque déclenchement
+    }, 1, 1) //parameters: task, delaySeconds, intervalSeconds
   }
+
 
   override def onGraphicRender(g: GdxGraphics): Unit = {
     g.clear()
 
     // Hero activity
-
     manageHero()
     manageEnemy()
 
-    // Camera follows the hero
+    //camera that follows the hero
     g.zoom(zoom)
     g.moveCamera(hero.getPosition.x, hero.getPosition.y, tiledLayer1.getWidth * tiledLayer1.getTileWidth, tiledLayer1.getHeight * tiledLayer1.getTileHeight)
 
@@ -157,13 +157,11 @@ class GameScreen extends RenderingScreen{
     tiledMapRenderer.setView(g.getCamera)
     tiledMapRenderer.render()
 
-    // Draw the hero
+    //draw hero
     hero.animate(Gdx.graphics.getDeltaTime)
     hero.draw(g)
 
-    if (enemySeeHero(hero.getPosition, Enemy.enemyArray)) {
-      lostGame = true
-    }
+    //draw each enemy
     for(e <- Enemy.enemyArray){
       e.animate(Gdx.graphics.getDeltaTime)
       e.draw(g)
@@ -172,12 +170,20 @@ class GameScreen extends RenderingScreen{
 
     // to adapt to lostScreen and wonScreen
     g.zoom(1f)
-    // Affichez le temps restant à l'écran
+    //display remaining time
     g.drawString(g.getCamera.position.x - 150, g.getCamera.position.y - 70, s"Time left: $remainingTime s", font20)
-    // move camera to adapt to next screens
+    //move camera to adapt to next screens (lostScreen and wonScreen)
     g.moveCamera(20,5)
 
+
+    //if hero gets caught -> looses the game
+    if (enemySeeHero(hero.getPosition, Enemy.enemyArray)) {
+      lostGame = true
+    }
+
+    //checks if player won or not
     gameWon()
+
 
     if (wonGame){
       Enemy.enemyArray.clear()
@@ -221,8 +227,8 @@ class GameScreen extends RenderingScreen{
 
   /**
    * Changes tile at position x,y on map to new tile
-   * @param map1
-   * @param layer
+   * @param map1: TiledMap
+   * @param layer: TiledMapLayer
    *
    * @param x - position
    * @param y - position
@@ -237,6 +243,7 @@ class GameScreen extends RenderingScreen{
     val cell = new Cell()
     layer.setCell(x,y,cell)
 
+    // depends on the layer -> portal tiles are on second layer
     if(newID < 270){
       tileSet = map1.getTileSets.getTileSet(0)
     } else {
@@ -245,16 +252,15 @@ class GameScreen extends RenderingScreen{
     }
     newTile = tileSet.getTile(newID)
 
-
     if (newTile != null) {
-      cell.setTile(newTile) // Réutiliser l'ancienne tuile au lieu de créer une nouvelle pour garder les propriétés
+      cell.setTile(newTile)
     }
   }
 
   /**
    * Create a custom map that is random each time based on the orinal map created on Tiled
-   * @param originalMap
-   * @return new map
+   * @param originalMap: TiledMap
+   * @return new map with groun, walls, objects and enemys placed
    */
   private def createCustomMap(originalMap: TiledMap): TiledMap = {
 
@@ -269,22 +275,22 @@ class GameScreen extends RenderingScreen{
       "table" -> 244
     )
 
-    //Basic tiles ID
+    //basic tiles ID
     val noneID = 0
     val groundID = 65
     val wallID = 23
 
-    //Create a new TiledMap
-    var newMap = new TiledMap()
+    //breate a new TiledMap
+    val newMap = new TiledMap()
 
-    //Get the tilesets from the original map and add it to the new map
+    //get the tilesets from the original map and add it to the new map
     val originalTileSet1 = originalMap.getTileSets.getTileSet(0)
     val originalTileSet2 = originalMap.getTileSets.getTileSet(1)
 
     newMap.getTileSets.addTileSet(originalTileSet1)
     newMap.getTileSets.addTileSet(originalTileSet2)
 
-    //Create a new layer with the same dimensions and tile size as the original
+    //create a new layer with the same dimensions and tile size as the original
     val originalLayer1 = originalMap.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
     val originalLayer2 = originalMap.getLayers.get(1).asInstanceOf[TiledMapTileLayer]
 
@@ -297,7 +303,8 @@ class GameScreen extends RenderingScreen{
     newMap.getLayers.add(newLayer1)
     newMap.getLayers.add(newLayer2)
 
-    //place the tiles depending on the given grid
+
+    //place the tiles depending on our grid
     for(i <- gridMap.indices){
       for(j <- gridMap(0).indices){
         if(gridMap(i)(j) != 99 && gridMap(i)(j) != 0) {
@@ -306,10 +313,7 @@ class GameScreen extends RenderingScreen{
       }
     }
 
-    //place objects -
-    // rooms even: mirror, chest, cauldron
-    // rooms uneven: jar, table, chair
-
+    //place objects
     for (i <- rooms.indices){
       if (rooms(i).nb != 1) {
         if (rooms(i).nb % 2 == 0){
@@ -340,19 +344,18 @@ class GameScreen extends RenderingScreen{
 
     //place portal in far room
     //portal tile id : 562
-    placePortal(newMap, 562)
+    placePortal(newMap)
 
-    return newMap
+    newMap
   }
 
   private def placeRandomObjects(map1: TiledMap, layer: TiledMapTileLayer, objectID: Int, room: Room): Unit = {
     val rand = new Random()
 
-    // dimensions of room
     val roomWidth = room.roomGrid.length
     val roomHeight = room.roomGrid(0).length
 
-    // find room's coordinate in main grid
+    //find room's coordinate in main grid
     var roomX : Int = 0
     var roomY : Int = 0
     var leaveLoop: Boolean = false
@@ -360,6 +363,7 @@ class GameScreen extends RenderingScreen{
     var i: Int = 0
     var j: Int = 0
 
+    //we loop until we find the first cell that belongs to the room
     while(!leaveLoop && i < gridMap.length){
       while(!leaveLoop && j < gridMap(0).length){
         if (gridMap(i)(j) == room.nb){
@@ -373,21 +377,23 @@ class GameScreen extends RenderingScreen{
       j = 0
     }
 
-    // random coordinates to place object
-    val xRand = roomX + 1 + rand.nextInt(roomWidth)
-    val yRand = roomY + 1 + rand.nextInt(roomHeight)
+    //random coordinates to place object
+    val xRand = roomX + rand.nextInt(roomWidth)
+    val yRand = roomY + rand.nextInt(roomHeight)
 
     changeTile(map1, layer, xRand, yRand, objectID)
 
   }
 
-  private def placePortal(map1: TiledMap, portalID: Int): Unit = {
+  private def placePortal(map1: TiledMap): Unit = {
 
+    // we need both layers in case we have to put the portal on top of an object
     val layer1 = map1.getLayers.get(0).asInstanceOf[TiledMapTileLayer]
     val layer2 = map1.getLayers.get(1).asInstanceOf[TiledMapTileLayer]
 
     var leaveLoop: Boolean = false
 
+    //coordinates
     var x: Int = 0
     var y: Int = 0
 
@@ -421,6 +427,7 @@ class GameScreen extends RenderingScreen{
     changeTile(map1, layer2, x+1, y+1, portalID)
     changeTile(map1, layer1, x+1, y+1, 65)
 
+    //add these coordinates to an array to test the winning condition
     portalCoordinates.addOne((x+2, y+2))
     portalCoordinates.addOne((x+1, y+2))
     portalCoordinates.addOne((x+2, y+1))
@@ -429,13 +436,14 @@ class GameScreen extends RenderingScreen{
 
   }
 
-  def placeRandomEnemy(room: Room) : Unit = {
+  private def placeRandomEnemy(room: Room) : Unit = {
     require(room.nb != 1)
 
-    var rand = new Random
+    val rand = new Random
 
     val roomWidth: Int = room.roomGrid.length
     val roomHeight: Int = room.roomGrid(0).length
+
     var roomX: Int = 0
     var roomY: Int = 0
     var leaveLoop: Boolean = false
@@ -456,38 +464,38 @@ class GameScreen extends RenderingScreen{
       j = 0
     }
 
-    val xRand = roomX + 1 + rand.nextInt(roomWidth - 1)
-    val yRand = roomY + 1 + rand.nextInt(roomHeight - 1)
+    val xRand = roomX + rand.nextInt(roomWidth - 1)
+    val yRand = roomY + rand.nextInt(roomHeight - 1)
 
     Enemy.genEnemy(xRand,yRand)
   }
 
+  /**
+   * Method that checks if the player won the game or not
+   */
   private def gameWon(): Unit = {
-    var heroPosition = hero.position
+    val heroX = (hero.position.x.toInt / tiledLayer2.getTileWidth).toInt
+    val heroY = (hero.position.y.toInt / tiledLayer2.getTileWidth).toInt
 
-    val heroX = (heroPosition.x.toInt / tiledLayer2.getTileWidth).toInt
-    val heroY = (heroPosition.y.toInt / tiledLayer2.getTileWidth).toInt
-
+    //we check if the hero is on top of the portal and if 2 seconds later, he is still there
     if(portalCoordinates.contains((heroX, heroY))){
       if(portalEntryTime == 0){
         portalEntryTime = System.currentTimeMillis()
       } else if (System.currentTimeMillis() - portalEntryTime >= 2000)
         wonGame = true
     } else {
+      //if the hero left the portal -> we put portalEntryTime back to 0
       portalEntryTime = 0
     }
   }
 
-
-
   /**
    * Get the "isWalkable" property of the given tile.
    *
-   * @param tile
-   *            The tile to know the property
+   * @param tile The tile to know the property
    * @return true if the property is set to "true", false otherwise
    */
-  def isWalkable(tile: TiledMapTile): Boolean = {
+  private def isWalkable(tile: TiledMapTile): Boolean = {
     if (tile == null) return false
 
     val walkable = tile.getProperties.get("isWalkable")
@@ -495,32 +503,35 @@ class GameScreen extends RenderingScreen{
     if(walkable == true){
       return true
     }
-    return false
+    false
   }
 
-  def isOccupiedEnemy(vector: Vector2) : Boolean = {
+  private def isOccupiedEnemy(vector: Vector2) : Boolean = {
     for (enemy: Enemy <- Enemy.enemyArray){
       if (vector.x == enemy.position.x && vector.y == enemy.position.y) return false
     }
-    return true
+    true
   }
 
-  def isOccupiedHero(vector : Vector2) : Boolean = {
+  private def isOccupiedHero(vector : Vector2) : Boolean = {
     if (vector.x == hero.position.x && vector.y == hero.position.y) return false
-    return true
+    true
   }
 
+  /**
+   * Enemy sees hero if hero is in a cell surrounding the enemy
+   *
+   * @param position - position of hero
+   * @param listEnemy - list of all current enemies on the map
+   * @return
+   */
   private def enemySeeHero(position : Vector2, listEnemy : ArrayBuffer[Enemy]) : Boolean = {
-
     for (i <- listEnemy){
-
       if (math.abs(position.x-i.getPosition.x)<2*32 && math.abs(position.y-i.getPosition.y)<2*32){
         return true
       }
     }
-
-
-    return false
+    false
   }
 
   /**
@@ -539,9 +550,9 @@ class GameScreen extends RenderingScreen{
    * Manage the movements of the hero using the keyboard.
    */
   def manageHero(): Unit = {
-    // Do nothing if hero is already moving
+    //do nothing if hero is already moving
     if (!hero.isMoving) {
-      // Compute direction and next cell
+      //dompute direction and next cell
       var nextCell: TiledMapTile = null
       var goalDirection: Hero.Direction.Value = Hero.Direction.NULL
       var vectorOffset : Vector2 = new Vector2(0,0)
@@ -564,9 +575,9 @@ class GameScreen extends RenderingScreen{
       }
 
       val nextPositionVector: Vector2 = new Vector2(hero.getPosition.x+vectorOffset.x, hero.getPosition.y+vectorOffset.y)
-      // Is the move valid ?
+      //is move valid ?
       if (isWalkable(nextCell) && isOccupiedEnemy(nextPositionVector)) {
-        // Go
+        //go
         hero.setSpeed(getSpeed(nextCell))
         footsteps.play()
         hero.go(goalDirection)
@@ -577,7 +588,10 @@ class GameScreen extends RenderingScreen{
     }
   }
 
-  def manageEnemy(): Unit = {
+  /**
+   * Similar to manageHero but we can't control the enemies
+   */
+  private def manageEnemy(): Unit = {
     for (i <- Enemy.enemyArray){
       var nextCell: TiledMapTile = null
       var goalDirection: Enemy.Direction.Value = Enemy.Direction.NULL
@@ -601,7 +615,7 @@ class GameScreen extends RenderingScreen{
           vectorOffset = new Vector2(32,0)
         }
         val nextPositionVector: Vector2 = new Vector2(i.getPosition.x+vectorOffset.x, i.getPosition.y+vectorOffset.y)
-        if ((isWalkable(nextCell) && isOccupiedHero(nextPositionVector) && isOccupiedEnemy(nextPositionVector))) {
+        if (isWalkable(nextCell) && isOccupiedHero(nextPositionVector) && isOccupiedEnemy(nextPositionVector)) {
           // Go
           i.setSpeed(getSpeed(nextCell))
           i.go(goalDirection)
@@ -621,19 +635,11 @@ class GameScreen extends RenderingScreen{
 
   override def onKeyDown(keycode: Int): Unit = {
     super.onKeyDown(keycode)
-
     keyStatus.put(keycode, true)
   }
 
   override def dispose(): Unit = {
     super.dispose()
-
-  }
-
-}
-
-object GameScreen {
-  def main(args: Array[String]): Unit = {
-    new GameScreen
   }
 }
+

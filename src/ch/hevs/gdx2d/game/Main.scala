@@ -2,13 +2,13 @@ package ch.hevs.gdx2d.game
 
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
 import ch.hevs.gdx2d.desktop.PortableApplication
-import ch.hevs.gdx2d.game.screens.{MenuScreen, RulesScreen, lostScreen, wonScreen}
+import ch.hevs.gdx2d.game.screens.{GameScreen, MenuScreen, RulesScreen, lostScreen, wonScreen}
 import ch.hevs.gdx2d.lib.{GdxGraphics, ScreenManager}
 import com.badlogic.gdx.{Gdx, Input}
 
 import scala.collection.mutable
 
-class Main extends PortableApplication(1920,1080){
+class Main extends PortableApplication(700,700){
 
   // key management
   private val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
