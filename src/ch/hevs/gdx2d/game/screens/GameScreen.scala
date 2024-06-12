@@ -180,11 +180,13 @@ class GameScreen extends RenderingScreen{
     gameWon()
 
     if (wonGame){
+      Enemy.enemyArray.clear()
       winSound.play()
       Main.instance.s.transitionTo(3, ScreenManager.TransactionType.SLICE)
     }
 
     if (lostGame && !wonGame) {
+      Enemy.enemyArray.clear()
       lostSound.play()
       Main.instance.s.transitionTo(2, ScreenManager.TransactionType.SLICE)
     }
@@ -622,6 +624,12 @@ class GameScreen extends RenderingScreen{
 
     keyStatus.put(keycode, true)
   }
+
+  override def dispose(): Unit = {
+    super.dispose()
+
+  }
+
 }
 
 object GameScreen {

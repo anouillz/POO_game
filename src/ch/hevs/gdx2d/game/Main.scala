@@ -8,7 +8,7 @@ import com.badlogic.gdx.{Gdx, Input}
 
 import scala.collection.mutable
 
-class Main extends PortableApplication(1920,1080){
+class Main extends PortableApplication(700,700){
 
   // key management
   private val keyStatus: mutable.Map[Int, Boolean] = mutable.TreeMap[Int, Boolean]()
