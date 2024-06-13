@@ -21,5 +21,3 @@ This is a school project for the _School of engineering_ HES-SO Valais//Wallis. 
 - Press `Enter` to play
 - Enjoy !
 
-## Video
-Video of the game can be found in `/data/video`
