@@ -28,6 +28,8 @@ class Hero extends Entity with DrawableObject {
   var newPosition: Vector2 = _
   var position: Vector2 = _
 
+  private var move = false
+
   //hero charateristics
   private var _health: Int = 3
   private var _money: Int = 0
@@ -48,7 +50,6 @@ class Hero extends Entity with DrawableObject {
     _money = newMoney
   }
 
-  private var move = false
 
 
   /**

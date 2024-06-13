@@ -2,7 +2,7 @@ package ch.hevs.gdx2d.game.screens
 
 import ch.hevs.gdx2d.components.audio.MusicPlayer
 import ch.hevs.gdx2d.components.screen_management.RenderingScreen
-import ch.hevs.gdx2d.game.rooms.{Room, generateRooms}
+import ch.hevs.gdx2d.game.rooms.{Room, GenerateRooms}
 import ch.hevs.gdx2d.game.Main
 import ch.hevs.gdx2d.game.entity.{Enemy, Hero}
 import ch.hevs.gdx2d.lib.{GdxGraphics, ScreenManager}
@@ -50,7 +50,7 @@ class GameScreen extends RenderingScreen{
   Gdx.input.setInputProcessor(multiplexer)
 
   //Grid that will represent the map
-  private val gridPerso: generateRooms = new generateRooms
+  private val gridPerso: GenerateRooms = new GenerateRooms
   private val gridMap = gridPerso.grid
   gridPerso.generateRooms(gridMap)
   var rooms: ArrayBuffer[Room] = gridPerso.rooms

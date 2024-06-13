@@ -3,7 +3,7 @@ package ch.hevs.gdx2d.game.rooms
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
-class generateRooms {
+class GenerateRooms {
 
   //width and height of our grid
   val width: Int = 50
